@@ -73,7 +73,7 @@ void cACLearner::LoadCriticSolver(const std::string& solver_file)
 {
 	if (HasCriticNet())
 	{
-		mCriticNet->LoadSolver(solver_file);
+		mCriticNet->LoadOptimizer(solver_file);
 	}
 }
 
@@ -84,7 +84,7 @@ void cACLearner::LoadActorNet(const std::string& net_file)
 
 void cACLearner::LoadActorSolver(const std::string& solver_file)
 {
-	mNet->LoadSolver(solver_file);
+	mNet->LoadOptimizer(solver_file);
 }
 
 void cACLearner::OutputModel(const std::string& filename) const

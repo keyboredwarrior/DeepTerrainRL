@@ -52,8 +52,7 @@ caffe::Solver<Dtype>* GetSolver2(const caffe::SolverParameter& param) {
 cNeuralNet::cNeuralNet()
 {
 	Clear();
-	mAsync = false;
-}
+	}
 
 cNeuralNet::~cNeuralNet()
 {
@@ -107,21 +106,12 @@ void cNeuralNet::LoadModel(const std::string& model_file)
 	}
 }
 
-void cNeuralNet::LoadSolver(const std::string& solver_file, bool async)
+void cNeuralNet::LoadOptimizer(const std::string& config_file)
 {
-	if (solver_file != "")
+	if (config_file != "")
 	{
-		mSolverFile = solver_file;
-		mAsync = async;
-
-		if (mAsync)
-		{
-			cNNSolver::BuildSolverAsync(solver_file, mSolver);
-		}
-		else
-		{
-			cNNSolver::BuildSolver(solver_file, mSolver);
-		}
+		mOptimizerFile = config_file;
+		cOptimizerExecutor::BuildExecutor(config_file, mOptimizer);
 
 		if (!ValidOffsetScale())
 		{
@@ -217,7 +207,7 @@ void cNeuralNet::LoadScale(const std::string& scale_file)
 void cNeuralNet::Clear()
 {
 	mNet.reset();
-	mSolver.reset();
+	mOptimizer.reset();
 	mValidModel = false;
 
 	mInputOffset.resize(0);
@@ -235,7 +225,7 @@ void cNeuralNet::Train(const tProblem& prob)
 		int batch_size = GetBatchSize();
 		int num_batches = static_cast<int>(prob.mX.rows()) / batch_size;
 		
-		StepSolver(prob.mPassesPerStep * num_batches);
+		StepOptimizer(prob.mPassesPerStep * num_batches);
 	}
 	else
 	{
@@ -250,7 +240,7 @@ double cNeuralNet::ForwardBackward(const tProblem& prob)
 	if (HasSolver())
 	{
 		LoadTrainData(prob.mX, prob.mY);
-		loss = mSolver->ForwardBackward();
+		loss = mOptimizer->ForwardBackward();
 	}
 	else
 	{
@@ -260,9 +250,9 @@ double cNeuralNet::ForwardBackward(const tProblem& prob)
 	return loss;
 }
 
-void cNeuralNet::StepSolver(int iters)
+void cNeuralNet::StepOptimizer(int iters)
 {
-	mSolver->ApplySteps(iters);
+	mOptimizer->ApplySteps(iters);
 
 	if (HasNet())
 	{
@@ -271,10 +261,10 @@ void cNeuralNet::StepSolver(int iters)
 	mValidModel = true;
 }
 
-void cNeuralNet::ResetSolver()
+void cNeuralNet::ResetOptimizer()
 {
-	mSolver.reset();
-	LoadSolver(mSolverFile, mAsync);
+	mOptimizer.reset();
+	LoadOptimizer(mOptimizerFile);
 }
 
 void cNeuralNet::CalcOffsetScale(const Eigen::MatrixXd& X, Eigen::VectorXd& out_offset, Eigen::VectorXd& out_scale) const
@@ -702,7 +692,7 @@ bool cNeuralNet::HasNet() const
 
 bool cNeuralNet::HasSolver() const
 {
-	return mSolver != nullptr;
+	return mOptimizer != nullptr;
 }
 
 bool cNeuralNet::HasLayer(const std::string layer_name) const
@@ -1057,7 +1047,7 @@ boost::shared_ptr<caffe::Net<cNeuralNet::tNNData>> cNeuralNet::GetTrainNet() con
 {
 	if (HasSolver())
 	{
-		return mSolver->GetNet();
+		return mOptimizer->GetNet();
 	}
 	return nullptr;
 }

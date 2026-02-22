@@ -358,14 +358,14 @@ void cAsyncACTrainer::SetupCriticNet(int id)
 {
 	auto& net = mPool[id].mNet;
 	//net->LoadNet(mParams.mNetFile);
-	net->LoadSolver(mParams.mSolverFile, true);
+	net->LoadOptimizer(mParams.mSolverFile);
 }
 
 void cAsyncACTrainer::SetupActorNet(int id)
 {
 	auto& net = mPool[id].mNet;
 	//net->LoadNet(mActorNetFile);
-	net->LoadSolver(mActorSolverFile, true);
+	net->LoadOptimizer(mActorSolverFile);
 }
 
 void cAsyncACTrainer::SetupTrainer(std::shared_ptr<cNeuralNetTrainer>& out_trainer)
