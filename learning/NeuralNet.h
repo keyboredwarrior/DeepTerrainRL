@@ -4,7 +4,7 @@
 #include <caffe/caffe.hpp>
 #include <caffe/layers/memory_data_layer.hpp>
 #include <mutex>
-
+// FUUUUCK
 class cNNSolver;
 
 class cNeuralNet
