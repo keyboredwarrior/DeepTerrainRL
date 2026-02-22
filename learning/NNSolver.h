@@ -12,7 +12,7 @@ public:
 		tConfig();
 		std::string mBackend;
 		std::string mOptimizer;
-		std::string mSolverFile;
+		std::string mPolicyCheckpoint;
 
 		bool IsValid() const;
 	};

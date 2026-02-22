@@ -205,8 +205,8 @@ void cAsyncTrainer::BuildNetPool()
 void cAsyncTrainer::SetupNet(int id)
 {
 	auto& net = mPool[id].mNet;
-	//net->LoadNet(mParams.mNetFile);
-	net->LoadOptimizer(mParams.mSolverFile);
+	//net->LoadNet(mParams.mPolicyArchConfig);
+	net->LoadOptimizer(mParams.mPolicyCheckpoint);
 }
 
 void cAsyncTrainer::BuildTrainer(std::shared_ptr<cNeuralNetTrainer>& out_trainer) const

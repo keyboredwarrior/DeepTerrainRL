@@ -3,8 +3,8 @@
 
 cTrainerInterface::tParams::tParams()
 {
-	mNetFile = "";
-	mSolverFile = "";
+	mPolicyArchConfig = "";
+	mPolicyCheckpoint = "";
 	mPlaybackMemSize = 100000;
 	mPoolSize = 1;
 	mNumInitSamples = 1024;

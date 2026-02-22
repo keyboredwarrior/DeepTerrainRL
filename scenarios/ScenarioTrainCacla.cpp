@@ -22,12 +22,12 @@ void cScenarioTrainCacla::ParseArgs(const cArgParser& parser)
 	parser.ParseString("critic_net", mCriticNetFile);
 	parser.ParseString("critic_model", mCriticModelFile);
 
-	mActorSolverFile = mTrainerParams.mSolverFile;
-	mActorNetFile = mTrainerParams.mNetFile;
+	mActorSolverFile = mTrainerParams.mPolicyCheckpoint;
+	mActorNetFile = mTrainerParams.mPolicyArchConfig;
 	mActorModelFile = mPoliModelFile;
 
-	mTrainerParams.mSolverFile = mCriticSolverFile;
-	mTrainerParams.mNetFile = mCriticNetFile;
+	mTrainerParams.mPolicyCheckpoint = mCriticSolverFile;
+	mTrainerParams.mPolicyArchConfig = mCriticNetFile;
 }
 
 std::string cScenarioTrainCacla::GetName() const

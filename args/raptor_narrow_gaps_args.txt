@@ -13,6 +13,6 @@
 -num_sim_substeps= 5
 -world_scale= 4
 
--policy_solver= data/policies/raptor/nets/raptor_mace3_solver.prototxt
--policy_net= data/policies/raptor/nets/raptor_mace3_deploy.prototxt
+-policy_checkpoint= data/policies/raptor/nets/raptor_mace3_solver.prototxt
+-policy_arch_config= data/policies/raptor/nets/raptor_mace3_deploy.prototxt
 -policy_model= data/policies/raptor/models/raptor_mace3_narrow_gaps_model.h5

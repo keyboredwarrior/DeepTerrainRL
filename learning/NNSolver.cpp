@@ -77,7 +77,7 @@ namespace
 		}
 		if (!root["solver_file"].isNull())
 		{
-			out_config.mSolverFile = root["solver_file"].asString();
+			out_config.mPolicyCheckpoint = root["solver_file"].asString();
 		}
 		return true;
 	}
@@ -121,7 +121,7 @@ namespace
 			}
 			else if (key == "solver_file")
 			{
-				out_config.mSolverFile = val;
+				out_config.mPolicyCheckpoint = val;
 			}
 		}
 		return true;
@@ -140,7 +140,7 @@ namespace
 	void BuildCaffeExecutor(const cOptimizerExecutor::tConfig& config, std::shared_ptr<cOptimizerExecutor>& out_executor)
 	{
 		caffe::SolverParameter param;
-		caffe::ReadProtoFromTextFileOrDie(config.mSolverFile, &param);
+		caffe::ReadProtoFromTextFileOrDie(config.mPolicyCheckpoint, &param);
 		caffe::Caffe::set_mode(caffe::Caffe::CPU);
 		const std::string optimizer = ToLower(config.mOptimizer);
 
@@ -176,13 +176,13 @@ namespace
 }
 
 cOptimizerExecutor::tConfig::tConfig()
-	: mBackend("caffe"), mOptimizer("sgd"), mSolverFile("")
+	: mBackend("caffe"), mOptimizer("sgd"), mPolicyCheckpoint("")
 {
 }
 
 bool cOptimizerExecutor::tConfig::IsValid() const
 {
-	return !mBackend.empty() && !mOptimizer.empty() && !mSolverFile.empty();
+	return !mBackend.empty() && !mOptimizer.empty() && !mPolicyCheckpoint.empty();
 }
 
 void cOptimizerExecutor::BuildExecutor(const std::string& config_file, std::shared_ptr<cOptimizerExecutor>& out_executor)

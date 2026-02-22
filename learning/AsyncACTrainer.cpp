@@ -357,8 +357,8 @@ void cAsyncACTrainer::SetupNet(int id)
 void cAsyncACTrainer::SetupCriticNet(int id)
 {
 	auto& net = mPool[id].mNet;
-	//net->LoadNet(mParams.mNetFile);
-	net->LoadOptimizer(mParams.mSolverFile);
+	//net->LoadNet(mParams.mPolicyArchConfig);
+	net->LoadOptimizer(mParams.mPolicyCheckpoint);
 }
 
 void cAsyncACTrainer::SetupActorNet(int id)

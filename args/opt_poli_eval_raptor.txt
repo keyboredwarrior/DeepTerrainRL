@@ -11,7 +11,7 @@
 -num_sim_substeps= 5
 -world_scale= 4
 
--policy_net= data/policies/raptor/nets/raptor_mace3_deploy.prototxt
+-policy_arch_config= data/policies/raptor/nets/raptor_mace3_deploy.prototxt
 -policy_model= data/policies/raptor/models/raptor_mace3_mixed_model1.h5
 
 -poli_eval_max_episodes= 250
