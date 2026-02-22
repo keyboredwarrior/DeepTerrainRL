@@ -1,5 +1,4 @@
 #include "NeuralNet.h"
-#include <caffe/util/hdf5.hpp>
 #include <json/json.h>
 
 #include "util/Util.h"
@@ -58,7 +57,7 @@ cNeuralNet::~cNeuralNet()
 {
 }
 
-void cNeuralNet::LoadNet(const std::string& net_file)
+void cNeuralNet::LoadArchitectureConfig(const std::string& net_file)
 {
 	if (net_file != "")
 	{
@@ -77,13 +76,13 @@ void cNeuralNet::LoadNet(const std::string& net_file)
 	}
 }
 
-void cNeuralNet::LoadModel(const std::string& model_file)
+void cNeuralNet::LoadCheckpoint(const std::string& model_file)
 {
 	if (model_file != "")
 	{
 		if (HasNet())
 		{
-			mNet->CopyTrainedLayersFromHDF5(model_file);
+			mNet->CopyTrainedLayersFrom(model_file);
 			LoadScale(GetOffsetScaleFile(model_file));
 			SyncSolverParams();
 
@@ -92,7 +91,7 @@ void cNeuralNet::LoadModel(const std::string& model_file)
 		else if (HasSolver())
 		{
 			auto net = GetTrainNet();
-			net->CopyTrainedLayersFromHDF5(model_file);
+			net->CopyTrainedLayersFrom(model_file);
 			LoadScale(GetOffsetScaleFile(model_file));
 			SyncNetParams();
 
@@ -558,14 +557,15 @@ int cNeuralNet::CalcNumParams() const
 	return num_params;
 }
 
-void cNeuralNet::OutputModel(const std::string& out_file) const
+void cNeuralNet::OutputCheckpoint(const std::string& out_file) const
 {
 	if (HasNet())
 	{
 		{
-			// arg, hdf5 doesn't seem to be threadsafe
 			std::lock_guard<std::mutex> output_lock(gOutputLock);
-			mNet->ToHDF5(out_file);
+			caffe::NetParameter out_params;
+			mNet->ToProto(&out_params, false);
+			caffe::WriteProtoToBinaryFile(out_params, out_file);
 		}
 		std::string scale_file = GetOffsetScaleFile(out_file);
 		WriteOffsetScale(scale_file);
@@ -754,7 +754,7 @@ void cNeuralNet::BlendModel(const cNeuralNet& other, double this_weight, double 
 	mValidModel = true;
 }
 
-void cNeuralNet::BuildNetParams(caffe::NetParameter& out_params) const
+void cNeuralNet::BuildBackendNetParams(caffe::NetParameter& out_params) const
 {
 	mNet->ToProto(&out_params);
 }
@@ -1052,7 +1052,7 @@ boost::shared_ptr<caffe::Net<cNeuralNet::tNNData>> cNeuralNet::GetTrainNet() con
 	return nullptr;
 }
 
-boost::shared_ptr<caffe::MemoryDataLayer<cNeuralNet::tNNData>> cNeuralNet::GetTrainDataLayer() const
+boost::shared_ptr<caffe::MemoryDataLayer<cNeuralNet::tNNData>> cNeuralNet::GetTrainDataInputLayer() const
 {
 	if (HasSolver())
 	{
@@ -1114,52 +1114,13 @@ void cNeuralNet::LoadTrainData(const Eigen::MatrixXd& X, const Eigen::MatrixXd& 
 
 bool cNeuralNet::WriteData(const Eigen::MatrixXd& X, const Eigen::MatrixXd& Y, const std::string& out_file)
 {
-	bool succ = true;
-	int num_data = static_cast<int>(X.rows());
-	assert(num_data = static_cast<int>(Y.rows()));
-	int x_size = static_cast<int>(X.cols());
-	int y_size = static_cast<int>(Y.cols());
-
-	std::vector<float> x_data(num_data * x_size);
-	std::vector<float> y_data(num_data * y_size);
-
-	for (int i = 0; i < num_data; ++i)
-	{
-		const auto& curr_x = X.row(i);
-		const auto& curr_y = Y.row(i);
-
-		for (int j = 0; j < x_size; ++j)
-		{
-			x_data[i * x_size + j] = static_cast<float>(curr_x(j));
-		}
-
-		for (int j = 0; j < y_size; ++j)
-		{
-			y_data[i * y_size + j] = static_cast<float>(curr_y(j));
-		}
-	}
-
-	const int rank = 4;
-	const hsize_t x_dims[rank] = { num_data, 1, 1, x_size };
-	const hsize_t y_dims[rank] = { num_data, 1, 1, y_size };
-
-	hid_t file_hid = H5Fcreate(out_file.c_str(), H5F_ACC_TRUNC, H5P_DEFAULT,
-								H5P_DEFAULT);
-	herr_t status = H5LTmake_dataset_float(file_hid, "data", rank, x_dims, x_data.data());
-	if (status == 0)
-	{
-		status = H5LTmake_dataset_float(file_hid, "label", rank, y_dims, y_data.data());
-	}
-
-	if (status != 0)
-	{
-		succ = false;
-	}
-
-	status = H5Fclose(file_hid);
-	succ &= (status == 0);
-	return succ;
+	(void)X;
+	(void)Y;
+	(void)out_file;
+	printf("WriteData is no longer supported (HDF5 path removed)\n");
+	return false;
 }
+
 
 std::string cNeuralNet::GetOffsetScaleFile(const std::string& model_file) const
 {

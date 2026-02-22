@@ -14,8 +14,8 @@
 -num_sim_substeps= 5
 -world_scale= 4
 
--policy_solver= data/policies/dog/nets/dog_actor_solver.prototxt
--policy_net= data/policies/dog/nets/dog_actor_deploy.prototxt
+-policy_checkpoint= data/policies/dog/nets/dog_actor_solver.prototxt
+-policy_arch_config= data/policies/dog/nets/dog_actor_deploy.prototxt
 
 -critic_solver= data/policies/dog/nets/dog_critic_solver.prototxt
 -critic_net= data/policies/dog/nets/dog_critic_deploy.prototxt

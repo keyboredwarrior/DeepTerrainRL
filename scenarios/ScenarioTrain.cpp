@@ -53,8 +53,8 @@ void cScenarioTrain::ParseArgs(const cArgParser& parser)
 	parser.ParseDouble("init_exp_temp", mInitExpTemp);
 	parser.ParseDouble("init_exp_base_rate", mInitExpBaseRate);
 
-	parser.ParseString("policy_net", mTrainerParams.mNetFile);
-	parser.ParseString("policy_solver", mTrainerParams.mSolverFile);
+	parser.ParseString("policy_arch_config", mTrainerParams.mPolicyArchConfig);
+	parser.ParseString("policy_checkpoint", mTrainerParams.mPolicyCheckpoint);
 
 	parser.ParseInt("trainer_replay_mem_size", mTrainerParams.mPlaybackMemSize);
 	parser.ParseBool("trainer_init_input_offset_scale", mTrainerParams.mInitInputOffsetScale);

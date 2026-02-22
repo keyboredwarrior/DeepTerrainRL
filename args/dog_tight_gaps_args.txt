@@ -13,6 +13,6 @@
 -num_sim_substeps= 5
 -world_scale= 4
 
--policy_solver= data/policies/dog/nets/dog_mace3_solver.prototxt
--policy_net= data/policies/dog/nets/dog_mace3_deploy.prototxt
+-policy_checkpoint= data/policies/dog/nets/dog_mace3_solver.prototxt
+-policy_arch_config= data/policies/dog/nets/dog_mace3_deploy.prototxt
 -policy_model= data/policies/dog/models/dog_mace3_tight_gaps_model.h5

@@ -7,7 +7,7 @@
 -char_type= dog
 -char_ctrl= dog_mace
 
--policy_net= data/policies/dog/nets/dog_mace3_deploy.prototxt
+-policy_arch_config= data/policies/dog/nets/dog_mace3_deploy.prototxt
 -policy_model= data/policies/dog/models/dog_mace3_tight_gaps_model.h5
 
 -poli_eval_max_episodes= 250

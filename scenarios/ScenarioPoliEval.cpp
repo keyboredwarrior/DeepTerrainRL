@@ -38,7 +38,7 @@ cScenarioPoliEval::~cScenarioPoliEval()
 void cScenarioPoliEval::ParseArgs(const cArgParser& parser)
 {
 	cScenarioSimChar::ParseArgs(parser);
-	parser.ParseString("policy_net", mPoliNetFile);
+	parser.ParseString("policy_arch_config", mPoliNetFile);
 	parser.ParseString("policy_model", mPoliModelFile);
 	parser.ParseString("critic_net", mCriticNetFile);
 	parser.ParseString("critic_model", mCriticModelFile);

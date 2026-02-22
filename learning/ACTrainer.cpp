@@ -31,8 +31,8 @@ void cACTrainer::SetActorFiles(const std::string& actor_solver_file,
 void cACTrainer::Init(const tParams& params)
 {
 	mParams = params;
-	mCriticNetFile = params.mNetFile;
-	mCriticSolverFile = params.mSolverFile;
+	mCriticNetFile = params.mPolicyArchConfig;
+	mCriticSolverFile = params.mPolicyCheckpoint;
 
 	mActorIter = 0;
 	BuildActor(mActorSolverFile, mActorNetFile);

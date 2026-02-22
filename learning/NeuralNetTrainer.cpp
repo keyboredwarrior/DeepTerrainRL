@@ -27,7 +27,7 @@ void cNeuralNetTrainer::Init(const tParams& params)
 {
 	mParams = params;
 	int pool_size = GetPoolSize();
-	BuildNetPool(params.mNetFile, params.mSolverFile, pool_size);
+	BuildNetPool(params.mPolicyArchConfig, params.mPolicyCheckpoint, pool_size);
 	InitPlaybackMem(params.mPlaybackMemSize);
 
 	ResetParams();
@@ -60,7 +60,7 @@ void cNeuralNetTrainer::Reset()
 {
 	ResetParams();
 	int pool_size = GetNetPoolSize();
-	BuildNetPool(mParams.mNetFile, mParams.mSolverFile, pool_size);
+	BuildNetPool(mParams.mPolicyArchConfig, mParams.mPolicyCheckpoint, pool_size);
 
 	if (EnableAsyncMode())
 	{
@@ -270,12 +270,12 @@ int cNeuralNetTrainer::GetNumInitSamples() const
 
 const std::string& cNeuralNetTrainer::GetNetFile() const
 {
-	return mParams.mNetFile;
+	return mParams.mPolicyArchConfig;
 }
 
 const std::string& cNeuralNetTrainer::GetSolverFile() const
 {
-	return mParams.mSolverFile;
+	return mParams.mPolicyCheckpoint;
 }
 
 cNeuralNetTrainer::eStage cNeuralNetTrainer::GetStage() const

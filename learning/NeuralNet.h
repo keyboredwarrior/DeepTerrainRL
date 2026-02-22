@@ -33,8 +33,10 @@ public:
 	cNeuralNet();
 	virtual ~cNeuralNet();
 
-	virtual void LoadNet(const std::string& net_file);
-	virtual void LoadModel(const std::string& model_file);
+	virtual void LoadArchitectureConfig(const std::string& net_file);
+	virtual void LoadCheckpoint(const std::string& model_file);
+	virtual void LoadNet(const std::string& net_file) { LoadArchitectureConfig(net_file); }
+	virtual void LoadModel(const std::string& model_file) { LoadCheckpoint(model_file); }
 	virtual void LoadOptimizer(const std::string& config_file);
 	virtual void LoadScale(const std::string& scale_file);
 
@@ -65,7 +67,8 @@ public:
 	virtual int GetBatchSize() const;
 	virtual int CalcNumParams() const;
 
-	virtual void OutputModel(const std::string& out_file) const;
+	virtual void OutputCheckpoint(const std::string& out_file) const;
+	virtual void OutputModel(const std::string& out_file) const { OutputCheckpoint(out_file); }
 	virtual void PrintParams() const;
 
 	virtual bool HasNet() const;
@@ -86,7 +89,8 @@ public:
 	virtual void CopyModel(const cNeuralNet& other);
 	virtual void LerpModel(const cNeuralNet& other, double lerp);
 	virtual void BlendModel(const cNeuralNet& other, double this_weight, double other_weight);
-	virtual void BuildNetParams(caffe::NetParameter& out_params) const;
+	virtual void BuildBackendNetParams(caffe::NetParameter& out_params) const;
+	virtual void BuildNetParams(caffe::NetParameter& out_params) const { BuildBackendNetParams(out_params); }
 	virtual bool CompareModel(const cNeuralNet& other) const;
 
 	virtual void ForwardInjectNoisePrefilled(double mean, double stdev, const std::string& layer_name, Eigen::VectorXd& out_y) const;
@@ -130,7 +134,8 @@ protected:
 	virtual void EvalBatchSolver(const Eigen::MatrixXd& X, Eigen::MatrixXd& out_Y) const;
 
 	virtual boost::shared_ptr<caffe::Net<tNNData>> GetTrainNet() const;
-	virtual boost::shared_ptr<caffe::MemoryDataLayer<tNNData>> GetTrainDataLayer() const;
+	virtual boost::shared_ptr<caffe::MemoryDataLayer<tNNData>> GetTrainDataInputLayer() const;
+	virtual boost::shared_ptr<caffe::MemoryDataLayer<tNNData>> GetTrainDataLayer() const { return GetTrainDataInputLayer(); }
 	virtual void LoadTrainData(const Eigen::MatrixXd& X, const Eigen::MatrixXd& Y);
 
 	virtual bool WriteData(const Eigen::MatrixXd& X, const Eigen::MatrixXd& Y, const std::string& out_file);

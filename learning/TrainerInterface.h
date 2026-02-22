@@ -18,8 +18,8 @@ public:
 
 	struct tParams
 	{
-		std::string mNetFile;
-		std::string mSolverFile;
+		std::string mPolicyArchConfig;
+		std::string mPolicyCheckpoint;
 		int mPlaybackMemSize;
 		int mPoolSize;
 		int mNumInitSamples;

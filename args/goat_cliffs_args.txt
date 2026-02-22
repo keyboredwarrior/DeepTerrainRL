@@ -13,6 +13,6 @@
 -landing_target_step_x= 1.1
 -landing_target_offset_x= 1.3
 
--policy_solver= data/policies/dog/nets/dog_mace3_solver.prototxt
--policy_net= data/policies/dog/nets/dog_mace3_deploy.prototxt
+-policy_checkpoint= data/policies/dog/nets/dog_mace3_solver.prototxt
+-policy_arch_config= data/policies/dog/nets/dog_mace3_deploy.prototxt
 -policy_model= data/policies/goat/models/goat_mace3_cliffs_model.h5
