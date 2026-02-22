@@ -240,7 +240,7 @@ void cACTrainer::BuildActor(const std::string& solver_file, const std::string& n
 {
 	mActorNet = std::unique_ptr<cNeuralNet>(new cNeuralNet());
 	mActorNet->LoadNet(net_file);
-	mActorNet->LoadSolver(solver_file);
+	mActorNet->LoadOptimizer(solver_file);
 }
 
 void cACTrainer::BuildTupleActorX(const tExpTuple& tuple, Eigen::VectorXd& out_x)
@@ -756,7 +756,7 @@ void cACTrainer::ResetActorSolver()
 	}
 	else
 	{
-		mActorNet->ResetSolver();
+		mActorNet->ResetOptimizer();
 	}
 }
 

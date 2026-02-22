@@ -801,7 +801,7 @@ void cNeuralNetTrainer::BuildNetPool(const std::string& net_file, const std::str
 		auto& net = mNetPool[i];
 		net = std::unique_ptr<cNeuralNet>(new cNeuralNet());
 		net->LoadNet(net_file);
-		net->LoadSolver(solver_file);
+		net->LoadOptimizer(solver_file);
 	}
 }
 
@@ -864,7 +864,7 @@ void cNeuralNetTrainer::ResetSolvers()
 		else
 		{
 			auto& curr_net = mNetPool[j];
-			curr_net->ResetSolver();
+			curr_net->ResetOptimizer();
 		}
 	}
 }

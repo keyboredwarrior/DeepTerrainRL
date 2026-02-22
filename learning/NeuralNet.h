@@ -5,7 +5,7 @@
 #include <caffe/layers/memory_data_layer.hpp>
 #include <mutex>
 // FUUUUCK
-class cNNSolver;
+class cOptimizerExecutor;
 
 class cNeuralNet
 {
@@ -35,14 +35,18 @@ public:
 
 	virtual void LoadNet(const std::string& net_file);
 	virtual void LoadModel(const std::string& model_file);
-	virtual void LoadSolver(const std::string& solver_file, bool async = false);
+	virtual void LoadOptimizer(const std::string& config_file);
 	virtual void LoadScale(const std::string& scale_file);
+
+	virtual void LoadSolver(const std::string& solver_file, bool async = false) { LoadOptimizer(solver_file); }
+	virtual void StepSolver(int iters) { StepOptimizer(iters); }
+	virtual void ResetSolver() { ResetOptimizer(); }
 
 	virtual void Clear();
 	virtual void Train(const tProblem& prob);
 	virtual double ForwardBackward(const tProblem& prob);
-	virtual void StepSolver(int iters);
-	virtual void ResetSolver();
+	virtual void StepOptimizer(int iters);
+	virtual void ResetOptimizer();
 	virtual void CalcOffsetScale(const Eigen::MatrixXd& X, Eigen::VectorXd& out_offset, Eigen::VectorXd& out_scale) const;
 	virtual void SetInputOffsetScale(const Eigen::VectorXd& offset, const Eigen::VectorXd& scale);
 	virtual void SetOutputOffsetScale(const Eigen::VectorXd& offset, const Eigen::VectorXd& scale);
@@ -108,11 +112,9 @@ protected:
 	static std::mutex gOutputLock;
 
 	bool mValidModel;
-	bool mAsync;
-
-	std::unique_ptr<cCaffeNetWrapper> mNet;
-	std::shared_ptr<cNNSolver> mSolver;
-	std::string mSolverFile;
+		std::unique_ptr<cCaffeNetWrapper> mNet;
+	std::shared_ptr<cOptimizerExecutor> mOptimizer;
+	std::string mOptimizerFile;
 	
 	Eigen::VectorXd mInputOffset;
 	Eigen::VectorXd mInputScale;

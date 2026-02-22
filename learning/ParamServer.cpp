@@ -73,7 +73,7 @@ void cParamServer::UpdateNet(const tInputInfo& in_info, tOutputInfo& out_info)
 	LockEntry(id);
 
 	net->CopyGrad(*grad_net);
-	net->StepSolver(1);
+	net->StepOptimizer(1);
 
 	if (in_info.mIncIter)
 	{
@@ -123,7 +123,7 @@ void cParamServer::ResetSolver(int id)
 {
 	auto& entry = mPool[id];
 	auto& net = mPool[id].mNet;
-	net->ResetSolver();
+	net->ResetOptimizer();
 }
 
 void cParamServer::LockEntry(int id)

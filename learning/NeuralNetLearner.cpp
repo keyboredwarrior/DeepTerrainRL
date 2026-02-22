@@ -73,7 +73,7 @@ void cNeuralNetLearner::LoadNet(const std::string& net_file)
 
 void cNeuralNetLearner::LoadSolver(const std::string& solver_file)
 {
-	mNet->LoadSolver(solver_file);
+	mNet->LoadOptimizer(solver_file);
 }
 
 void cNeuralNetLearner::OutputModel(const std::string& filename) const
