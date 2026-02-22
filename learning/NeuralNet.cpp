@@ -1,11 +1,13 @@
 #include "NeuralNet.h"
 #include <json/json.h>
+#include <algorithm>
 
 #include "util/Util.h"
 #include "util/FileUtil.h"
 #include "util/JsonUtil.h"
 #include "NNSolver.h"
 #include "AsyncSolver.h"
+#include "MinibatchAdapter.h"
 
 const std::string gInputOffsetKey = "InputOffset";
 const std::string gInputScaleKey = "InputScale";
@@ -219,7 +221,7 @@ void cNeuralNet::Train(const tProblem& prob)
 {
 	if (HasSolver())
 	{
-		LoadTrainData(prob.mX, prob.mY);
+		FeedTrainBatch(prob.mX, prob.mY);
 
 		int batch_size = GetBatchSize();
 		int num_batches = static_cast<int>(prob.mX.rows()) / batch_size;
@@ -238,7 +240,7 @@ double cNeuralNet::ForwardBackward(const tProblem& prob)
 	double loss = 0;
 	if (HasSolver())
 	{
-		LoadTrainData(prob.mX, prob.mY);
+		FeedTrainBatch(prob.mX, prob.mY);
 		loss = mOptimizer->ForwardBackward();
 	}
 	else
@@ -444,33 +446,14 @@ void cNeuralNet::EvalBatchSolver(const Eigen::MatrixXd& X, Eigen::MatrixXd& out_
 	int num_batches = static_cast<int>(std::ceil((1.0 * X.rows()) / batch_size));
 	out_Y.resize(num_data, output_size);
 
-	std::vector<tNNData> data(batch_size * input_size);
-
-	auto data_layer = boost::static_pointer_cast<caffe::MemoryDataLayer<tNNData>>(net->layer_by_name(GetInputLayerName()));
+	std::vector<tNNData> data;
 	
 	for (int b = 0; b < num_batches; ++b)
 	{
-		for (int i = 0; i < batch_size; ++i)
-		{
-			int data_idx = b * batch_size + i;
-			if (data_idx >= num_data)
-			{
-				break;
-			}
-
-			auto curr_data = X.row(data_idx);
-			for (int j = 0; j < input_size; ++j)
-			{
-				double val = curr_data[j];
-				if (ValidOffsetScale())
-				{
-					val += mInputOffset[j];
-					val = val * mInputScale[j];
-				}
-				data[i * input_size + j] = val;
-			}
-		}
-		data_layer->AddData(data);
+		const int first_row = b * batch_size;
+		const int rows_in_batch = std::min(batch_size, num_data - first_row);
+		auto X_batch = X.middleRows(first_row, rows_in_batch);
+		FeedInputBatch(X_batch);
 
 		tNNData loss = 0;
 		net->ForwardPrefilled(&loss);
@@ -484,6 +467,10 @@ void cNeuralNet::EvalBatchSolver(const Eigen::MatrixXd& X, Eigen::MatrixXd& out_
 		for (int i = 0; i < batch_size; ++i)
 		{
 			int data_idx = b * batch_size + i;
+			if (data_idx >= num_data)
+			{
+				break;
+			}
 			auto curr_data = out_Y.row(data_idx);
 
 			for (int j = 0; j < output_size; ++j)
@@ -541,8 +528,9 @@ int cNeuralNet::GetBatchSize() const
 	int batch_size = 0;
 	if (HasSolver())
 	{
-		auto data_layer = GetTrainDataLayer();
-		batch_size = data_layer->batch_size();
+		auto net = GetTrainNet();
+		auto input_blob = net->blob_by_name(GetInputLayerName());
+		batch_size = input_blob->shape(0);
 	}
 	return batch_size;
 }
@@ -1052,22 +1040,9 @@ boost::shared_ptr<caffe::Net<cNeuralNet::tNNData>> cNeuralNet::GetTrainNet() con
 	return nullptr;
 }
 
-boost::shared_ptr<caffe::MemoryDataLayer<cNeuralNet::tNNData>> cNeuralNet::GetTrainDataInputLayer() const
-{
-	if (HasSolver())
-	{
-		auto train_net = GetTrainNet();
-		const std::string& data_layer_name = GetInputLayerName();
-		auto data_layer = boost::static_pointer_cast<caffe::MemoryDataLayer<tNNData>>(train_net->layer_by_name(data_layer_name));
-		return data_layer;
-	}
-	return nullptr;
-}
-
-void cNeuralNet::LoadTrainData(const Eigen::MatrixXd& X, const Eigen::MatrixXd& Y)
+void cNeuralNet::FeedTrainBatch(const Eigen::MatrixXd& X, const Eigen::MatrixXd& Y) const
 {
 	boost::shared_ptr<caffe::Net<tNNData>> train_net = GetTrainNet();
-	auto data_layer = GetTrainDataLayer();
 	int batch_size = GetBatchSize();
 
 	int num_batches = static_cast<int>(X.rows()) / batch_size;
@@ -1078,38 +1053,54 @@ void cNeuralNet::LoadTrainData(const Eigen::MatrixXd& X, const Eigen::MatrixXd& 
 	int data_dim = static_cast<int>(X.cols());
 	int label_dim = static_cast<int>(Y.cols());
 
-	std::vector<tNNData> data(num_data * data_dim);
-	std::vector<tNNData> labels(num_data * label_dim);
+	auto data_blob = train_net->blob_by_name(GetInputLayerName());
+	auto label_blob = train_net->blob_by_name("label");
+	assert(data_blob != nullptr);
+	assert(label_blob != nullptr);
 
-	for (int i = 0; i < num_data; ++i)
+	std::vector<tNNData> data;
+	std::vector<tNNData> labels;
+	if (ValidOffsetScale())
 	{
-		auto curr_data = X.row(i);
-		auto curr_label = Y.row(i);
-
-		for (int j = 0; j < data_dim; ++j)
-		{
-			double val = curr_data[j];
-			if (ValidOffsetScale())
-			{
-				val += mInputOffset[j];
-				val = val * mInputScale[j];
-			}
-			data[i * data_dim + j] = val;
-		}
-
-		for (int j = 0; j < label_dim; ++j)
-		{
-			double val = curr_label[j];
-			if (ValidOffsetScale())
-			{
-				val += mOutputOffset[j];
-				val = val * mOutputScale[j];
-			}
-			labels[i * label_dim + j] = val;
-		}
+		cMinibatchAdapter::StageNormalizedMatrix(X, num_data, data_dim, mInputOffset, mInputScale, data);
+		cMinibatchAdapter::StageNormalizedMatrix(Y, num_data, label_dim, mOutputOffset, mOutputScale, labels);
+	}
+	else
+	{
+		cMinibatchAdapter::StageMatrix(X, num_data, data_dim, data);
+		cMinibatchAdapter::StageMatrix(Y, num_data, label_dim, labels);
 	}
 
-	data_layer->AddData(data, labels);
+	cMinibatchAdapter::CopyToBlob(data, *data_blob);
+	cMinibatchAdapter::CopyToBlob(labels, *label_blob);
+}
+
+void cNeuralNet::FeedInputBatch(const Eigen::MatrixXd& X) const
+{
+	auto train_net = GetTrainNet();
+	auto data_blob = train_net->blob_by_name(GetInputLayerName());
+	assert(data_blob != nullptr);
+
+	const int batch_size = data_blob->shape(0);
+	const int data_dim = static_cast<int>(X.cols());
+	const int num_data = std::min(batch_size, static_cast<int>(X.rows()));
+
+	std::vector<tNNData> data;
+	if (ValidOffsetScale())
+	{
+		cMinibatchAdapter::StageNormalizedMatrix(X, num_data, data_dim, mInputOffset, mInputScale, data);
+	}
+	else
+	{
+		cMinibatchAdapter::StageMatrix(X, num_data, data_dim, data);
+	}
+
+	if (num_data < batch_size)
+	{
+		data.resize(batch_size * data_dim, 0);
+	}
+
+	cMinibatchAdapter::CopyToBlob(data, *data_blob);
 }
 
 bool cNeuralNet::WriteData(const Eigen::MatrixXd& X, const Eigen::MatrixXd& Y, const std::string& out_file)

@@ -218,6 +218,9 @@
     <ClCompile Include="learning\NeuralNet.cpp">
       <Filter>Source Files\learning</Filter>
     </ClCompile>
+    <ClCompile Include="learning\MinibatchAdapter.cpp">
+      <Filter>Source Files\learning</Filter>
+    </ClCompile>
     <ClCompile Include="scenarios\ScenarioTrain.cpp">
       <Filter>Source Files\scenarios</Filter>
     </ClCompile>
@@ -824,6 +827,9 @@
       <Filter>Source Files\learning</Filter>
     </ClInclude>
     <ClInclude Include="learning\NeuralNet.h">
+      <Filter>Source Files\learning</Filter>
+    </ClInclude>
+    <ClInclude Include="learning\MinibatchAdapter.h">
       <Filter>Source Files\learning</Filter>
     </ClInclude>
     <ClInclude Include="scenarios\ScenarioTrain.h">

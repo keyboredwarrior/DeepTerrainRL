@@ -2,7 +2,6 @@
 #include "util/MathUtil.h"
 #include <caffe/net.hpp>
 #include <caffe/caffe.hpp>
-#include <caffe/layers/memory_data_layer.hpp>
 #include <mutex>
 // FUUUUCK
 class cOptimizerExecutor;
@@ -134,9 +133,8 @@ protected:
 	virtual void EvalBatchSolver(const Eigen::MatrixXd& X, Eigen::MatrixXd& out_Y) const;
 
 	virtual boost::shared_ptr<caffe::Net<tNNData>> GetTrainNet() const;
-	virtual boost::shared_ptr<caffe::MemoryDataLayer<tNNData>> GetTrainDataInputLayer() const;
-	virtual boost::shared_ptr<caffe::MemoryDataLayer<tNNData>> GetTrainDataLayer() const { return GetTrainDataInputLayer(); }
-	virtual void LoadTrainData(const Eigen::MatrixXd& X, const Eigen::MatrixXd& Y);
+	virtual void FeedTrainBatch(const Eigen::MatrixXd& X, const Eigen::MatrixXd& Y) const;
+	virtual void FeedInputBatch(const Eigen::MatrixXd& X) const;
 
 	virtual bool WriteData(const Eigen::MatrixXd& X, const Eigen::MatrixXd& Y, const std::string& out_file);
 	virtual std::string GetOffsetScaleFile(const std::string& model_file) const;
