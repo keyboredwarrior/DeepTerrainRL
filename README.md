@@ -11,60 +11,37 @@ This section covers some of the steps to setup and compile the code. The softwar
 
 ### Dependencies
 
- 1. Caffe (http://caffe.berkeleyvision.org/installation.html)  
-	Specific version (https://github.com/niuzhiheng/caffe.git @ 7b3e6f2341fe7374243ee0126f5cad1fa1e44e14)
-	sudo apt-get install libprotobuf-dev libleveldb-dev libsnappy-dev libopencv-dev libhdf5-serial-dev protobuf-compiler  
-	sudo apt-get install --no-install-recommends libboost-all-dev  
-	sudo apt-get install libgflags-dev libgoogle-glog-dev liblmdb-dev  
-	sudo apt-get install libatlas-base-dev  
-	
-	In the instruction to make and build Caffe uncomment the CPU only line  
-	```
-	# CPU-only switch (uncomment to build without GPU support).
-	CPU_ONLY := 1
-	```
-
-	Or if on Windows  
-	https://github.com/initialneil/caffe-vs2013
-
+ 1. **libtorch** (PyTorch C++ distribution) or **ONNX Runtime** for policy inference backend.
  2. Boost  
  3. OpenCV  
  4. BulletPhysics
- 5. CUDA  
-	Package Manager Installation  
-	Install repository meta-data  
-	When using a proxy server with aptitude, ensure that wget is set up to use the	same proxy settings before installing the cuda-repo package.  
-	$ sudo dpkg -i cuda-repo-<distro>_<version>_<architecture>.deb  
-	Update the Apt repository cache  
-	$ sudo apt-get update  
-	Install CUDA  
-	$ sudo apt-get install cuda  
- 	
+ 5. CUDA (optional, if building with CUDA-enabled dependencies)
  6. Json_cpp (https://github.com/open-source-parsers/jsoncpp)  
  7. Eigen (http://eigen.tuxfamily.org/index.php?title=Main_Page)  
  8. bits  
 	sudo apt-get install gcc-4.9-multilib g++-4.9-multilib 
 
+Backend notes:
+- `premake4 --backend=libtorch` (default)
+- `premake4 --backend=onnxruntime`
+- `premake4 --backend=both`
+- Optional integration flags: `--with-pybind` and `--with-ipc`
+
 ### Linux Build Instructions
 
  1. Download the most recent compressed external file from the newest release.
  1. Extract it and move into the DeepTerrainRL directory.
- 1. Rebuild caffe
-  1. Cd into external/caffe
-  1. Make clean
-  1. Make
- 1. Cd back to ../../
- 1. Copy the caffe libraries from external/caffe/build/lib to ./lib
- 1. Premake4 clean
- 1. Premake4 gmake
- 1. Make config=debug64
+ 1. Place backend SDKs under `external/ml_backends/` (Linux) and/or `../library/ml_backends/` (Windows):
+    - `libtorch/` for libtorch include/lib files
+    - `onnxruntime/` for ONNX Runtime include/lib files
+    - optional: `pybind11/` and `ipc/`
+ 1. Run `premake4 --backend=libtorch gmake` (or `--backend=onnxruntime` / `--backend=both`).
+ 1. Build with `make config=debug64`.
  1. Everything should build fine.
- 
- Note: There are some issues with the installation on Ubuntu 16.04. Some of the libraries have changed their location and name (see https://github.com/BVLC/caffe/issues/2347 for a solution).
 
 ### Windows
 
-This setup has been tested on Windows 7 and 10 with visual studio 2013.
+This setup has been tested on Windows 10/11 with modern Visual Studio toolchains (v140+).
 
   1. Download the library.zip file that contains almost all of the relevant pre compiled external libraries and source code.
   2. Unpack this library in the same directory the project is located in. For example, TerrainRL/../.
