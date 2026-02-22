@@ -250,6 +250,7 @@
     <ClCompile Include="learning\ExpTuple.cpp" />
     <ClCompile Include="learning\MACETrainer.cpp" />
     <ClCompile Include="learning\NeuralNet.cpp" />
+    <ClCompile Include="learning\MinibatchAdapter.cpp" />
     <ClCompile Include="learning\NeuralNetLearner.cpp" />
     <ClCompile Include="learning\NeuralNetTrainer.cpp" />
     <ClCompile Include="learning\NNSolver.cpp" />
@@ -356,6 +357,7 @@
     <ClInclude Include="learning\CaclaTrainer.h" />
     <ClInclude Include="learning\ExpTuple.h" />
     <ClInclude Include="learning\NeuralNet.h" />
+    <ClInclude Include="learning\MinibatchAdapter.h" />
     <ClInclude Include="learning\NeuralNetLearner.h" />
     <ClInclude Include="learning\NeuralNetTrainer.h" />
     <ClInclude Include="learning\NNSolver.h" />
