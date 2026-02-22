@@ -1,70 +1,21 @@
 #include "NNSolver.h"
-#include "AsyncSolver.h"
+
+#include <cassert>
+
+#include "CaffeBackend.h"
 
 void cNNSolver::BuildSolver(const std::string& solver_file, std::shared_ptr<cNNSolver>& out_solver)
 {
-	caffe::SolverParameter param;
-	caffe::ReadProtoFromTextFileOrDie(solver_file, &param);
-	caffe::Caffe::set_mode(caffe::Caffe::CPU);
-	caffe::SolverParameter_SolverType type = param.solver_type();
-	cNNSolver* solver = nullptr;
-
-	switch (type) {
-	case caffe::SolverParameter_SolverType_SGD:
-		solver = new cSGDSolver(param);
-		break;
-	case caffe::SolverParameter_SolverType_NESTEROV:
-		solver = new cNesterovSolver(param);
-		break;
-	case caffe::SolverParameter_SolverType_ADAGRAD:
-		solver = new cAdaGradSolver(param);
-		break;
-	case caffe::SolverParameter_SolverType_RMSPROP:
-		solver = new cRMSPropSolver(param);
-		break;
-	case caffe::SolverParameter_SolverType_ADADELTA:
-		solver = new cAdaDeltaSolver(param);
-		break;
-	case caffe::SolverParameter_SolverType_ADAM:
-		solver = new cAdamSolver(param);
-		break;
-	default:
-		LOG(FATAL) << "Unknown SolverType: " << type;
-	}
-	out_solver = std::shared_ptr<cNNSolver>(solver);
+	out_solver = std::shared_ptr<cNNSolver>(new cNNSolver());
+	auto optimizer = BuildCaffeOptimizer(solver_file, false);
+	out_solver->SetOptimizer(optimizer);
 }
 
 void cNNSolver::BuildSolverAsync(const std::string& solver_file, std::shared_ptr<cNNSolver>& out_solver)
 {
-	caffe::SolverParameter param;
-	caffe::ReadProtoFromTextFileOrDie(solver_file, &param);
-	caffe::Caffe::set_mode(caffe::Caffe::CPU);
-	caffe::SolverParameter_SolverType type = param.solver_type();
-	cNNSolver* solver = nullptr;
-
-	switch (type) {
-	case caffe::SolverParameter_SolverType_SGD:
-		solver = new cSGDSolverAsync(param);
-		break;
-	case caffe::SolverParameter_SolverType_NESTEROV:
-		solver = new cNesterovSolverAsync(param);
-		break;
-	case caffe::SolverParameter_SolverType_ADAGRAD:
-		solver = new cAdaGradSolverAsync(param);
-		break;
-	case caffe::SolverParameter_SolverType_RMSPROP:
-		solver = new cRMSPropSolverAsync(param);
-		break;
-	case caffe::SolverParameter_SolverType_ADADELTA:
-		solver = new cAdaDeltaSolverAsync(param);
-		break;
-	case caffe::SolverParameter_SolverType_ADAM:
-		solver = new cAdamSolverAsync(param);
-		break;
-	default:
-		LOG(FATAL) << "Unknown SolverType: " << type;
-	}
-	out_solver = std::shared_ptr<cNNSolver>(solver);
+	out_solver = std::shared_ptr<cNNSolver>(new cNNSolver());
+	auto optimizer = BuildCaffeOptimizer(solver_file, true);
+	out_solver->SetOptimizer(optimizer);
 }
 
 cNNSolver::cNNSolver()
@@ -73,4 +24,64 @@ cNNSolver::cNNSolver()
 
 cNNSolver::~cNNSolver()
 {
+}
+
+void cNNSolver::SetOptimizer(const tOptimizerPtr& optimizer)
+{
+	mOptimizer = optimizer;
+}
+
+void cNNSolver::SetTrainerBackend(const tTrainerBackendPtr& backend)
+{
+	mBackend = backend;
+}
+
+void cNNSolver::ApplySteps(int steps)
+{
+	assert(mOptimizer != nullptr);
+	mOptimizer->Step(steps);
+}
+
+double cNNSolver::ForwardBackward()
+{
+	if (mBackend != nullptr)
+	{
+		return mBackend->ForwardBackward();
+	}
+	assert(mOptimizer != nullptr);
+	return mOptimizer->ForwardBackward();
+}
+
+void cNNSolver::Reset()
+{
+	if (mOptimizer != nullptr)
+	{
+		mOptimizer->Reset();
+	}
+}
+
+void cNNSolver::ZeroGrad()
+{
+	if (mOptimizer != nullptr)
+	{
+		mOptimizer->ZeroGrad();
+	}
+}
+
+void cNNSolver::Update()
+{
+	if (mOptimizer != nullptr)
+	{
+		mOptimizer->Update();
+	}
+}
+
+tOptimizerPtr cNNSolver::GetOptimizer() const
+{
+	return mOptimizer;
+}
+
+tTrainerBackendPtr cNNSolver::GetTrainerBackend() const
+{
+	return mBackend;
 }

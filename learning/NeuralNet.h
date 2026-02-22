@@ -1,11 +1,11 @@
 #pragma once
 #include "util/MathUtil.h"
-#include <caffe/net.hpp>
-#include <caffe/caffe.hpp>
-#include <caffe/layers/memory_data_layer.hpp>
+#include <memory>
 #include <mutex>
+#include <vector>
 
 class cNNSolver;
+class INeuralModel;
 
 class cNeuralNet
 {
@@ -22,13 +22,6 @@ public:
 
 		bool HasData() const;
 	};
-
-	static void PrintParams(const caffe::Net<tNNData>& net);
-	static int CalcNumParams(const caffe::Net<tNNData>& net);
-	static void CopyModel(const caffe::Net<tNNData>& src, caffe::Net<tNNData>& dst);
-	static void CopyParams(const std::vector<caffe::Blob<tNNData>*>& src_params, const std::vector<caffe::Blob<tNNData>*>& dst_params);
-	static bool CompareModel(const caffe::Net<tNNData>& a, const caffe::Net<tNNData>& b);
-	static bool CompareParams(const std::vector<caffe::Blob<tNNData>*>& a_params, const std::vector<caffe::Blob<tNNData>*>& b_params);
 
 	cNeuralNet();
 	virtual ~cNeuralNet();
@@ -82,35 +75,24 @@ public:
 	virtual void CopyModel(const cNeuralNet& other);
 	virtual void LerpModel(const cNeuralNet& other, double lerp);
 	virtual void BlendModel(const cNeuralNet& other, double this_weight, double other_weight);
-	virtual void BuildNetParams(caffe::NetParameter& out_params) const;
 	virtual bool CompareModel(const cNeuralNet& other) const;
 
 	virtual void ForwardInjectNoisePrefilled(double mean, double stdev, const std::string& layer_name, Eigen::VectorXd& out_y) const;
 	virtual void GetLayerState(const std::string& layer_name, Eigen::VectorXd& out_state) const;
 	virtual void SetLayerState(const Eigen::VectorXd& state, const std::string& layer_name) const;
 
-	virtual const std::vector<caffe::Blob<tNNData>*>& GetParams() const;
 	virtual void SyncSolverParams();
 	virtual void SyncNetParams();
 
 	virtual void CopyGrad(const cNeuralNet& other);
 
 protected:
-	class cCaffeNetWrapper : public caffe::Net<tNNData>
-	{
-	public:
-		cCaffeNetWrapper(const std::string& net_file, caffe::Phase phase);
-		virtual ~cCaffeNetWrapper();
-
-		virtual int GetLayerIdx(const std::string& layer_name) const;
-	};
-
 	static std::mutex gOutputLock;
 
 	bool mValidModel;
 	bool mAsync;
 
-	std::unique_ptr<cCaffeNetWrapper> mNet;
+	std::shared_ptr<INeuralModel> mModel;
 	std::shared_ptr<cNNSolver> mSolver;
 	std::string mSolverFile;
 	
@@ -119,22 +101,13 @@ protected:
 	Eigen::VectorXd mOutputOffset;
 	Eigen::VectorXd mOutputScale;
 
+	mutable std::vector<tNNData> mGradBuffer;
+
 	virtual bool ValidOffsetScale() const;
 	virtual void InitOffsetScale();
 
-	virtual void FetchOutput(const std::vector<caffe::Blob<tNNData>*>& results_arr, Eigen::VectorXd& out_y) const;
-	virtual void FetchInput(Eigen::VectorXd& out_x) const;
-	virtual void EvalBatchNet(const Eigen::MatrixXd& X, Eigen::MatrixXd& out_Y) const;
-	virtual void EvalBatchSolver(const Eigen::MatrixXd& X, Eigen::MatrixXd& out_Y) const;
-
-	virtual boost::shared_ptr<caffe::Net<tNNData>> GetTrainNet() const;
-	virtual boost::shared_ptr<caffe::MemoryDataLayer<tNNData>> GetTrainDataLayer() const;
 	virtual void LoadTrainData(const Eigen::MatrixXd& X, const Eigen::MatrixXd& Y);
-
-	virtual bool WriteData(const Eigen::MatrixXd& X, const Eigen::MatrixXd& Y, const std::string& out_file);
 	virtual std::string GetOffsetScaleFile(const std::string& model_file) const;
 
 	virtual void WriteOffsetScale(const std::string& scale_file) const;
-	virtual const std::string& GetInputLayerName() const;
-	virtual const std::string& GetOutputLayerName() const;
 };
