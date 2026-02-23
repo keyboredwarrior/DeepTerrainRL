@@ -10,6 +10,8 @@ from typing import Dict, Iterable, List
 
 ITER_RE = re.compile(r"^Iter\s+(?P<iter>\d+)\s*$")
 REWARD_RE = re.compile(r"^Avg\s+Tuple\s+Reward:\s+(?P<reward>-?\d+(?:\.\d+)?)")
+LOSS_RE = re.compile(r"loss[:=]\s*(?P<loss>-?\d+(?:\.\d+)?)", re.IGNORECASE)
+GRAD_RE = re.compile(r"grad(?:ient)?(?:_norm| norm)?[:=]\s*(?P<grad>-?\d+(?:\.\d+)?)", re.IGNORECASE)
 
 
 @dataclass
@@ -42,6 +44,24 @@ def parse_training_log(log_path: str | Path) -> List[TrainingPoint]:
             points.append(TrainingPoint(iteration=current_iter, avg_tuple_reward=float(reward_match.group("reward"))))
 
     return points
+
+
+def parse_loss_series(log_path: str | Path) -> List[float]:
+    losses: List[float] = []
+    for raw_line in Path(log_path).read_text(encoding="utf-8", errors="ignore").splitlines():
+        match = LOSS_RE.search(raw_line)
+        if match:
+            losses.append(float(match.group("loss")))
+    return losses
+
+
+def parse_gradient_norm_series(log_path: str | Path) -> List[float]:
+    grads: List[float] = []
+    for raw_line in Path(log_path).read_text(encoding="utf-8", errors="ignore").splitlines():
+        match = GRAD_RE.search(raw_line)
+        if match:
+            grads.append(float(match.group("grad")))
+    return grads
 
 
 def write_reward_curve(points: Iterable[TrainingPoint], out_csv: str | Path) -> None:

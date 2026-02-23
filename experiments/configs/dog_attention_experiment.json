@@ -26,6 +26,17 @@
     "total_iters": 4000
   },
   "policy_checkpoint_solver": "data/policies/dog/nets/dog_mace3_solver.prototxt",
+  "policy_backend": "legacy_caffe",
+  "legacy_mode_enabled": true,
+  "milestones": {
+    "enable_parity_check": true,
+    "parity_tolerance": 0.05,
+    "enable_single_step_sanity": true,
+    "min_nonzero_gradients": 1,
+    "enable_short_horizon_sanity": true,
+    "short_horizon_iters": 100,
+    "enable_full_benchmark_matrix": false
+  },
   "max_iters": 4000,
   "terrain_file": "data/terrain/mixed.txt",
   "output_root": "experiments/results"
