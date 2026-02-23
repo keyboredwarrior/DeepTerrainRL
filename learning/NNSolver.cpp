@@ -2,8 +2,8 @@
 
 #include <algorithm>
 #include <cctype>
-#include <caffe/caffe.hpp>
-#include <caffe/sgd_solvers.hpp>
+#include <pytorch/pytorch.hpp>
+#include <pytorch/sgd_solvers.hpp>
 #include <fstream>
 #include <json/json.h>
 #include <sstream>
@@ -11,15 +11,15 @@
 namespace
 {
 	template <typename tSolverType>
-	class cCaffeOptimizerExecutor : public cOptimizerExecutor, protected tSolverType
+	class cPyTorchOptimizerExecutor : public cOptimizerExecutor, protected tSolverType
 	{
 	public:
-		explicit cCaffeOptimizerExecutor(const caffe::SolverParameter& param)
+		explicit cPyTorchOptimizerExecutor(const pytorch::SolverParameter& param)
 			: cOptimizerExecutor(), tSolverType(param)
 		{
 		}
 
-		virtual boost::shared_ptr<caffe::Net<cNeuralNet::tNNData>> GetNet() override
+		virtual boost::shared_ptr<pytorch::Net<cNeuralNet::tNNData>> GetNet() override
 		{
 			return tSolverType::net();
 		}
@@ -137,36 +137,36 @@ namespace
 		return config;
 	}
 
-	void BuildCaffeExecutor(const cOptimizerExecutor::tConfig& config, std::shared_ptr<cOptimizerExecutor>& out_executor)
+	void BuildPyTorchExecutor(const cOptimizerExecutor::tConfig& config, std::shared_ptr<cOptimizerExecutor>& out_executor)
 	{
-		caffe::SolverParameter param;
-		caffe::ReadProtoFromTextFileOrDie(config.mPolicyCheckpoint, &param);
-		caffe::Caffe::set_mode(caffe::Caffe::CPU);
+		pytorch::SolverParameter param;
+		pytorch::ReadProtoFromTextFileOrDie(config.mPolicyCheckpoint, &param);
+		pytorch::PyTorch::set_mode(pytorch::PyTorch::CPU);
 		const std::string optimizer = ToLower(config.mOptimizer);
 
 		if (optimizer == "sgd")
 		{
-			out_executor = std::shared_ptr<cOptimizerExecutor>(new cCaffeOptimizerExecutor<caffe::SGDSolver<cNeuralNet::tNNData>>(param));
+			out_executor = std::shared_ptr<cOptimizerExecutor>(new cPyTorchOptimizerExecutor<pytorch::SGDSolver<cNeuralNet::tNNData>>(param));
 		}
 		else if (optimizer == "nesterov")
 		{
-			out_executor = std::shared_ptr<cOptimizerExecutor>(new cCaffeOptimizerExecutor<caffe::NesterovSolver<cNeuralNet::tNNData>>(param));
+			out_executor = std::shared_ptr<cOptimizerExecutor>(new cPyTorchOptimizerExecutor<pytorch::NesterovSolver<cNeuralNet::tNNData>>(param));
 		}
 		else if (optimizer == "adagrad")
 		{
-			out_executor = std::shared_ptr<cOptimizerExecutor>(new cCaffeOptimizerExecutor<caffe::AdaGradSolver<cNeuralNet::tNNData>>(param));
+			out_executor = std::shared_ptr<cOptimizerExecutor>(new cPyTorchOptimizerExecutor<pytorch::AdaGradSolver<cNeuralNet::tNNData>>(param));
 		}
 		else if (optimizer == "rmsprop")
 		{
-			out_executor = std::shared_ptr<cOptimizerExecutor>(new cCaffeOptimizerExecutor<caffe::RMSPropSolver<cNeuralNet::tNNData>>(param));
+			out_executor = std::shared_ptr<cOptimizerExecutor>(new cPyTorchOptimizerExecutor<pytorch::RMSPropSolver<cNeuralNet::tNNData>>(param));
 		}
 		else if (optimizer == "adadelta")
 		{
-			out_executor = std::shared_ptr<cOptimizerExecutor>(new cCaffeOptimizerExecutor<caffe::AdaDeltaSolver<cNeuralNet::tNNData>>(param));
+			out_executor = std::shared_ptr<cOptimizerExecutor>(new cPyTorchOptimizerExecutor<pytorch::AdaDeltaSolver<cNeuralNet::tNNData>>(param));
 		}
 		else if (optimizer == "adam")
 		{
-			out_executor = std::shared_ptr<cOptimizerExecutor>(new cCaffeOptimizerExecutor<caffe::AdamSolver<cNeuralNet::tNNData>>(param));
+			out_executor = std::shared_ptr<cOptimizerExecutor>(new cPyTorchOptimizerExecutor<pytorch::AdamSolver<cNeuralNet::tNNData>>(param));
 		}
 		else
 		{
@@ -176,7 +176,7 @@ namespace
 }
 
 cOptimizerExecutor::tConfig::tConfig()
-	: mBackend("caffe"), mOptimizer("sgd"), mPolicyCheckpoint("")
+	: mBackend("pytorch"), mOptimizer("sgd"), mPolicyCheckpoint("")
 {
 }
 
@@ -193,9 +193,9 @@ void cOptimizerExecutor::BuildExecutor(const std::string& config_file, std::shar
 		LOG(FATAL) << "Invalid optimizer config file: " << config_file;
 	}
 
-	if (ToLower(config.mBackend) == "caffe")
+	if (ToLower(config.mBackend) == "pytorch")
 	{
-		BuildCaffeExecutor(config, out_executor);
+		BuildPyTorchExecutor(config, out_executor);
 	}
 	else
 	{

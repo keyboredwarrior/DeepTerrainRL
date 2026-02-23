@@ -33,20 +33,20 @@ bool cNeuralNet::tProblem::HasData() const
 
 
 template <typename Dtype>
-caffe::Solver<Dtype>* GetSolver2(const caffe::SolverParameter& param) {
-	caffe::SolverParameter_SolverType type = param.solver_type();
+pytorch::Solver<Dtype>* GetSolver2(const pytorch::SolverParameter& param) {
+	pytorch::SolverParameter_SolverType type = param.solver_type();
 
 	switch (type) {
-	case caffe::SolverParameter_SolverType_SGD:
-		return new caffe::SGDSolver<Dtype>(param);
-	case caffe::SolverParameter_SolverType_NESTEROV:
-		return new caffe::NesterovSolver<Dtype>(param);
-	case caffe::SolverParameter_SolverType_ADAGRAD:
-		return new caffe::AdaGradSolver<Dtype>(param);
+	case pytorch::SolverParameter_SolverType_SGD:
+		return new pytorch::SGDSolver<Dtype>(param);
+	case pytorch::SolverParameter_SolverType_NESTEROV:
+		return new pytorch::NesterovSolver<Dtype>(param);
+	case pytorch::SolverParameter_SolverType_ADAGRAD:
+		return new pytorch::AdaGradSolver<Dtype>(param);
 	default:
 		LOG(FATAL) << "Unknown SolverType: " << type;
 	}
-	return (caffe::Solver<Dtype>*) NULL;
+	return (pytorch::Solver<Dtype>*) NULL;
 }
 
 
@@ -64,7 +64,7 @@ void cNeuralNet::LoadArchitectureConfig(const std::string& net_file)
 	if (net_file != "")
 	{
 		Clear();
-		mNet = std::unique_ptr<cCaffeNetWrapper>(new cCaffeNetWrapper(net_file, caffe::TEST));
+		mNet = std::unique_ptr<cPyTorchNetWrapper>(new cPyTorchNetWrapper(net_file, pytorch::TEST));
 
 		if (!ValidOffsetScale())
 		{
@@ -346,7 +346,7 @@ void cNeuralNet::Eval(const Eigen::VectorXd& x, Eigen::VectorXd& out_y) const
 	assert(HasNet());
 	assert(x.size() == input_size);
 
-	caffe::Blob<tNNData> blob(1, 1, 1, input_size);
+	pytorch::Blob<tNNData> blob(1, 1, 1, input_size);
 	tNNData* blob_data = blob.mutable_cpu_data();
 	
 	Eigen::VectorXd norm_x = x;
@@ -358,9 +358,9 @@ void cNeuralNet::Eval(const Eigen::VectorXd& x, Eigen::VectorXd& out_y) const
 	}
 
 	tNNData loss = 0;
-	const std::vector<caffe::Blob<tNNData>*>& input_blobs = mNet->input_blobs();
+	const std::vector<pytorch::Blob<tNNData>*>& input_blobs = mNet->input_blobs();
 	input_blobs[0]->CopyFrom(blob);
-	const std::vector<caffe::Blob<tNNData>*>& result_arr = mNet->Forward();
+	const std::vector<pytorch::Blob<tNNData>*>& result_arr = mNet->Forward();
 
 	FetchOutput(result_arr, out_y);
 }
@@ -434,7 +434,7 @@ void cNeuralNet::EvalBatchNet(const Eigen::MatrixXd& X, Eigen::MatrixXd& out_Y) 
 void cNeuralNet::EvalBatchSolver(const Eigen::MatrixXd& X, Eigen::MatrixXd& out_Y) const
 {
 	assert(HasSolver());
-	boost::shared_ptr<caffe::Net<cNeuralNet::tNNData>> net = GetTrainNet();
+	boost::shared_ptr<pytorch::Net<cNeuralNet::tNNData>> net = GetTrainNet();
 
 	const int num_inputs = static_cast<int>(X.rows());
 	const int input_size = GetInputSize();
@@ -551,9 +551,9 @@ void cNeuralNet::OutputCheckpoint(const std::string& out_file) const
 	{
 		{
 			std::lock_guard<std::mutex> output_lock(gOutputLock);
-			caffe::NetParameter out_params;
+			pytorch::NetParameter out_params;
 			mNet->ToProto(&out_params, false);
-			caffe::WriteProtoToBinaryFile(out_params, out_file);
+			pytorch::WriteProtoToBinaryFile(out_params, out_file);
 		}
 		std::string scale_file = GetOffsetScaleFile(out_file);
 		WriteOffsetScale(scale_file);
@@ -569,7 +569,7 @@ void cNeuralNet::PrintParams() const
 	PrintParams(*mNet);
 }
 
-void cNeuralNet::PrintParams(const caffe::Net<tNNData>& net)
+void cNeuralNet::PrintParams(const pytorch::Net<tNNData>& net)
 {
 	const auto& param_blobs = net.learnable_params();
 	int num_blobs = static_cast<int>(param_blobs.size());
@@ -587,7 +587,7 @@ void cNeuralNet::PrintParams(const caffe::Net<tNNData>& net)
 	}
 }
 
-int cNeuralNet::CalcNumParams(const caffe::Net<tNNData>& net)
+int cNeuralNet::CalcNumParams(const pytorch::Net<tNNData>& net)
 {
 	auto layers = net.layers();
 	const auto& param_blobs = net.learnable_params();
@@ -604,14 +604,14 @@ int cNeuralNet::CalcNumParams(const caffe::Net<tNNData>& net)
 	return num_params;
 }
 
-void cNeuralNet::CopyModel(const caffe::Net<tNNData>& src, caffe::Net<tNNData>& dst)
+void cNeuralNet::CopyModel(const pytorch::Net<tNNData>& src, pytorch::Net<tNNData>& dst)
 {
 	const auto& src_params = src.learnable_params();
 	const auto& dst_params = dst.learnable_params();
 	CopyParams(src_params, dst_params);
 }
 
-void cNeuralNet::CopyParams(const std::vector<caffe::Blob<tNNData>*>& src_params, const std::vector<caffe::Blob<tNNData>*>& dst_params)
+void cNeuralNet::CopyParams(const std::vector<pytorch::Blob<tNNData>*>& src_params, const std::vector<pytorch::Blob<tNNData>*>& dst_params)
 {
 	int num_blobs = static_cast<int>(src_params.size());
 	for (int b = 0; b < num_blobs; ++b)
@@ -635,14 +635,14 @@ void cNeuralNet::CopyParams(const std::vector<caffe::Blob<tNNData>*>& src_params
 	}
 }
 
-bool cNeuralNet::CompareModel(const caffe::Net<tNNData>& a, const caffe::Net<tNNData>& b)
+bool cNeuralNet::CompareModel(const pytorch::Net<tNNData>& a, const pytorch::Net<tNNData>& b)
 {
 	const auto& a_params = a.learnable_params();
 	const auto& b_params = b.learnable_params();
 	return CompareParams(a_params, b_params);
 }
 
-bool cNeuralNet::CompareParams(const std::vector<caffe::Blob<tNNData>*>& a_params, const std::vector<caffe::Blob<tNNData>*>& b_params)
+bool cNeuralNet::CompareParams(const std::vector<pytorch::Blob<tNNData>*>& a_params, const std::vector<pytorch::Blob<tNNData>*>& b_params)
 {
 	int num_blobs = static_cast<int>(a_params.size());
 	for (int i = 0; i < num_blobs; ++i)
@@ -742,7 +742,7 @@ void cNeuralNet::BlendModel(const cNeuralNet& other, double this_weight, double 
 	mValidModel = true;
 }
 
-void cNeuralNet::BuildBackendNetParams(caffe::NetParameter& out_params) const
+void cNeuralNet::BuildBackendNetParams(pytorch::NetParameter& out_params) const
 {
 	mNet->ToProto(&out_params);
 }
@@ -779,7 +779,7 @@ void cNeuralNet::ForwardInjectNoisePrefilled(double mean, double stdev, const st
 		++layer_idx;
 		mNet->ForwardFrom(layer_idx);
 
-		const std::vector<caffe::Blob<tNNData>*>& result_arr = mNet->output_blobs();
+		const std::vector<pytorch::Blob<tNNData>*>& result_arr = mNet->output_blobs();
 		FetchOutput(result_arr, out_y);
 	}
 	else
@@ -831,7 +831,7 @@ void cNeuralNet::SetLayerState(const Eigen::VectorXd& state, const std::string& 
 	}
 }
 
-const std::vector<caffe::Blob<cNeuralNet::tNNData>*>& cNeuralNet::GetParams() const
+const std::vector<pytorch::Blob<cNeuralNet::tNNData>*>& cNeuralNet::GetParams() const
 {
 	if (HasNet())
 	{
@@ -905,9 +905,9 @@ void cNeuralNet::InitOffsetScale()
 	mOutputScale = Eigen::VectorXd::Ones(output_size);
 }
 
-void cNeuralNet::FetchOutput(const std::vector<caffe::Blob<tNNData>*>& results_arr, Eigen::VectorXd& out_y) const
+void cNeuralNet::FetchOutput(const std::vector<pytorch::Blob<tNNData>*>& results_arr, Eigen::VectorXd& out_y) const
 {
-	const caffe::Blob<tNNData>* result = results_arr[0];
+	const pytorch::Blob<tNNData>* result = results_arr[0];
 	const tNNData* result_data = result->cpu_data();
 
 	const int output_size = GetOutputSize();
@@ -1031,7 +1031,7 @@ void cNeuralNet::UnnormalizeOutputDiff(Eigen::VectorXd& y_diff) const
 	}
 }
 
-boost::shared_ptr<caffe::Net<cNeuralNet::tNNData>> cNeuralNet::GetTrainNet() const
+boost::shared_ptr<pytorch::Net<cNeuralNet::tNNData>> cNeuralNet::GetTrainNet() const
 {
 	if (HasSolver())
 	{
@@ -1042,7 +1042,7 @@ boost::shared_ptr<caffe::Net<cNeuralNet::tNNData>> cNeuralNet::GetTrainNet() con
 
 void cNeuralNet::FeedTrainBatch(const Eigen::MatrixXd& X, const Eigen::MatrixXd& Y) const
 {
-	boost::shared_ptr<caffe::Net<tNNData>> train_net = GetTrainNet();
+	boost::shared_ptr<pytorch::Net<tNNData>> train_net = GetTrainNet();
 	int batch_size = GetBatchSize();
 
 	int num_batches = static_cast<int>(X.rows()) / batch_size;
@@ -1158,19 +1158,19 @@ const std::string& cNeuralNet::GetOutputLayerName() const
 
 
 /////////////////////////////
-// Caffe Net Wrapper
+// PyTorch Net Wrapper
 /////////////////////////////
 
-cNeuralNet::cCaffeNetWrapper::cCaffeNetWrapper(const std::string& net_file, caffe::Phase phase)
-	: caffe::Net<tNNData>(net_file, phase)
+cNeuralNet::cPyTorchNetWrapper::cPyTorchNetWrapper(const std::string& net_file, pytorch::Phase phase)
+	: pytorch::Net<tNNData>(net_file, phase)
 {
 }
 
-cNeuralNet::cCaffeNetWrapper::~cCaffeNetWrapper()
+cNeuralNet::cPyTorchNetWrapper::~cPyTorchNetWrapper()
 {
 }
 
-int cNeuralNet::cCaffeNetWrapper::GetLayerIdx(const std::string& layer_name) const
+int cNeuralNet::cPyTorchNetWrapper::GetLayerIdx(const std::string& layer_name) const
 {
 	int idx = layer_names_index_.find(layer_name)->second;
 	return idx;

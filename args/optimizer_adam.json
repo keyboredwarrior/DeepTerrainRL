@@ -1,5 +1,5 @@
 {
-  "backend": "caffe",
+  "backend": "pytorch",
   "optimizer": "adam",
   "solver_file": "data/policies/dog/nets/dog_actor_solver.prototxt"
 }

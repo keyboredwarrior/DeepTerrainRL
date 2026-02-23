@@ -1,5 +1,5 @@
 #include <iostream>
-#include <caffe/caffe.hpp>
+#include <pytorch/pytorch.hpp>
 
 #include "util/FileUtil.h"
 #include "util/ArgParser.h"
@@ -530,11 +530,11 @@ void InitOpenGl(void)
 	gIntermediateFrameBuffer = std::shared_ptr<cTextureDesc>(new cTextureDesc(gWinWidth, gWinHeight, GL_RGBA, GL_RGBA, GL_UNSIGNED_BYTE, false));
 }
 
-void InitCaffe()
+void InitPyTorch()
 {
 	FLAGS_alsologtostderr = 1;
-	int caffe_argc = 1; // hack
-	caffe::GlobalInit(&caffe_argc, &gArgv);
+	int pytorch_argc = 1; // hack
+	pytorch::GlobalInit(&pytorch_argc, &gArgv);
 }
 
 int main(int argc, char** argv)
@@ -543,7 +543,7 @@ int main(int argc, char** argv)
 	gArgv = argv;
 	ParseArgs(gArgc, gArgv);
 
-	InitCaffe();
+	InitPyTorch();
 
 	glutInit(&gArgc, gArgv);
 	glutInitDisplayMode(GLUT_RGBA | GLUT_DOUBLE | GLUT_DEPTH);

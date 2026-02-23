@@ -41,7 +41,7 @@ void cMinibatchAdapter::StageNormalizedMatrix(const Eigen::MatrixXd& mat, int ro
 	}
 }
 
-void cMinibatchAdapter::CopyToBlob(const std::vector<tNNData>& data, caffe::Blob<tNNData>& out_blob)
+void cMinibatchAdapter::CopyToBlob(const std::vector<tNNData>& data, pytorch::Blob<tNNData>& out_blob)
 {
 	assert(out_blob.count() == static_cast<int>(data.size()));
 	std::copy(data.begin(), data.end(), out_blob.mutable_cpu_data());

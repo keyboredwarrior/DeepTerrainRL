@@ -26,7 +26,7 @@
     "total_iters": 4000
   },
   "policy_checkpoint_solver": "data/policies/dog/nets/dog_mace3_solver.prototxt",
-  "policy_backend": "legacy_caffe",
+  "policy_backend": "legacy_pytorch",
   "legacy_mode_enabled": true,
   "milestones": {
     "enable_parity_check": true,

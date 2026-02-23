@@ -3,7 +3,7 @@
 #include <vector>
 #include <Eigen/Dense>
 
-#include <caffe/blob.hpp>
+#include <pytorch/blob.hpp>
 
 class cMinibatchAdapter
 {
@@ -14,5 +14,5 @@ public:
 	static void StageNormalizedMatrix(const Eigen::MatrixXd& mat, int rows, int cols,
 									 const Eigen::VectorXd& offset, const Eigen::VectorXd& scale,
 									 std::vector<tNNData>& out_data);
-	static void CopyToBlob(const std::vector<tNNData>& data, caffe::Blob<tNNData>& out_blob);
+	static void CopyToBlob(const std::vector<tNNData>& data, pytorch::Blob<tNNData>& out_blob);
 };

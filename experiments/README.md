@@ -7,7 +7,7 @@ This package adds a consistent API for simulator training/evaluation runs with r
 - **Config schema** (`config.py`) for:
   - algorithm
   - network family (MLP/CNN/terrain-attention)
-  - backend selection (`legacy_caffe` or `modern_backend`)
+  - backend selection (`legacy_pytorch` or `modern_backend`)
   - transition milestone settings (A/B/C/D)
   - seed
   - terrain curriculum stages
@@ -32,7 +32,7 @@ This package adds a consistent API for simulator training/evaluation runs with r
 
 `ExperimentRunner` writes a `milestones.json` report with the following checks:
 
-1. **Milestone A** inference parity (`legacy_caffe` vs `modern_backend`) using same checkpoint and eval terrain list.
+1. **Milestone A** inference parity (`legacy_pytorch` vs `modern_backend`) using same checkpoint and eval terrain list.
 2. **Milestone B** single-step training sanity from training logs (loss decrease and non-zero gradients when present in logs).
 3. **Milestone C** short-horizon training smoke run (no crashes, produces reward points).
 4. **Milestone D** benchmark matrix readiness marker (`experiments/benchmark_matrix.py` for terrain × architecture sweeps).

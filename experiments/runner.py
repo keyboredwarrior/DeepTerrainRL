@@ -125,7 +125,7 @@ class ExperimentRunner:
                 "policy_arch_config": resolve_architecture_template(self.config.architecture),
                 "policy_model": checkpoint_path.as_posix(),
                 "policy_backend": selected_backend,
-                "legacy_mode": "true" if selected_backend == "legacy_caffe" else "false",
+                "legacy_mode": "true" if selected_backend == "legacy_pytorch" else "false",
                 "poli_eval_rand_seed": str(self.config.seed),
                 "poli_eval_max_episodes": "20",
                 "poli_eval_success_dist": "1.0",
@@ -178,7 +178,7 @@ class ExperimentRunner:
         return report
 
     def _check_inference_parity(self, run_dir: Path, checkpoint_path: Path) -> Dict[str, Any]:
-        legacy = self._run_eval_sweep(run_dir, checkpoint_path, backend="legacy_caffe")
+        legacy = self._run_eval_sweep(run_dir, checkpoint_path, backend="legacy_pytorch")
         modern = self._run_eval_sweep(run_dir, checkpoint_path, backend="modern_backend")
 
         terrain_deltas: Dict[str, Dict[str, float]] = {}
