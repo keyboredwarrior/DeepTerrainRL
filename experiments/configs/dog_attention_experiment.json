@@ -1,0 +1,32 @@
+{
+  "name": "dog_terrain_attention",
+  "algorithm": "mace",
+  "seed": 123,
+  "binary_path": "./TerrainRL",
+  "character": "dog",
+  "controller": "dog_mace",
+  "state_file": "data/states/dog_bound_state.txt",
+  "character_file": "data/characters/dog.txt",
+  "architecture": {
+    "family": "terrain_attention",
+    "hidden_sizes": [512, 256],
+    "conv_channels": [32, 32],
+    "use_attention": true,
+    "attention_heads": 4,
+    "attention_dim": 128
+  },
+  "curriculum": {
+    "terrain_types": [
+      "data/terrain/flat.txt",
+      "data/terrain/slopes.txt",
+      "data/terrain/gaps.txt",
+      "data/terrain/mixed.txt"
+    ],
+    "stage_iters": 1000,
+    "total_iters": 4000
+  },
+  "policy_checkpoint_solver": "data/policies/dog/nets/dog_mace3_solver.prototxt",
+  "max_iters": 4000,
+  "terrain_file": "data/terrain/mixed.txt",
+  "output_root": "experiments/results"
+}

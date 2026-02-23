@@ -16,6 +16,8 @@ public:
 	virtual void Clear();
 	
 	virtual void Update(double time_elapsed);
+	virtual bool IsDone() const;
+	virtual void Shutdown();
 	
 	virtual double GetAvgDist() const;
 	virtual void ResetAvgDist();
@@ -38,6 +40,10 @@ protected:
 	int mEpisodeCount;
 	int mCycleCount;
 	std::vector<double> mDistLog;
+	double mSuccessDist;
+	int mNumSuccess;
+	int mMaxEpisodes;
+	std::string mEvalOutputFile;
 
 	// analysis stuff
 	bool mRecordNNActivation;
@@ -80,4 +86,5 @@ protected:
 	virtual void RecordActionIDState(const std::string& out_file);
 
 	virtual bool IsValidCycle() const;
+	virtual void OutputEvalSummary() const;
 };

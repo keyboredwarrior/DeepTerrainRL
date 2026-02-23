@@ -1,0 +1,8 @@
+name: "policy_cnn_baseline"
+layer { name: "state" type: "Input" top: "state" input_param { shape { dim: 1 dim: 1 dim: 47 dim: 8 } } }
+layer { name: "conv0" type: "Convolution" bottom: "state" top: "conv0" convolution_param { num_output: 32 kernel_h: 3 kernel_w: 3 stride: 1 } }
+layer { name: "relu0" type: "ReLU" bottom: "conv0" top: "conv0" }
+layer { name: "conv1" type: "Convolution" bottom: "conv0" top: "conv1" convolution_param { num_output: 32 kernel_h: 3 kernel_w: 3 stride: 1 } }
+layer { name: "relu1" type: "ReLU" bottom: "conv1" top: "conv1" }
+layer { name: "flat" type: "Flatten" bottom: "conv1" top: "flat" }
+layer { name: "policy" type: "InnerProduct" bottom: "flat" top: "policy" inner_product_param { num_output: 64 } }

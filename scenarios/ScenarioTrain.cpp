@@ -342,12 +342,23 @@ void cScenarioTrain::UpdateTrainer(const std::vector<tExpTuple>& tuples, int exp
 	auto& learner = mLearners[exp_id];
 	learner->Train(tuples);
 
+	double avg_reward = 0;
+	if (!tuples.empty())
+	{
+		for (size_t i = 0; i < tuples.size(); ++i)
+		{
+			avg_reward += tuples[i].mReward;
+		}
+		avg_reward /= static_cast<double>(tuples.size());
+	}
+
 	int iters = learner->GetIter();
 
 	printf("\nIter %i\n", iters);
 
 	int num_tuples = learner->GetNumTuples();
 	printf("Num Tuples: %i\n", num_tuples);
+	printf("Avg Tuple Reward: %.8f\n", avg_reward);
 
 	double curriculum_phase = CalcCurriculumPhase(iters);
 	printf("Curriculum Phase: %.5f\n", curriculum_phase);

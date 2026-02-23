@@ -27,6 +27,7 @@ public:
 	virtual void Reset();
 	virtual void Clear();
 	virtual void Update(double time_elapsed);
+	virtual bool IsDone() const;
 	virtual void Keyboard(unsigned char key, int x, int y);
 	virtual void MouseClick(int button, int state, double x, double y);
 	virtual void MouseMove(double x, double y);

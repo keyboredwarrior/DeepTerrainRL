@@ -1,0 +1,10 @@
+name: "policy_terrain_attention"
+layer { name: "state" type: "Input" top: "state" input_param { shape { dim: 1 dim: 376 } } }
+layer { name: "terrain_feat" type: "InnerProduct" bottom: "state" top: "terrain_feat" inner_product_param { num_output: 128 } }
+layer { name: "terrain_feat_relu" type: "ReLU" bottom: "terrain_feat" top: "terrain_feat" }
+layer { name: "query" type: "InnerProduct" bottom: "state" top: "query" inner_product_param { num_output: 128 } }
+layer { name: "key" type: "InnerProduct" bottom: "terrain_feat" top: "key" inner_product_param { num_output: 128 } }
+layer { name: "attn_logits" type: "Eltwise" bottom: "query" bottom: "key" top: "attn_logits" eltwise_param { operation: PROD } }
+layer { name: "attn_gate" type: "Sigmoid" bottom: "attn_logits" top: "attn_gate" }
+layer { name: "attn_context" type: "Eltwise" bottom: "terrain_feat" bottom: "attn_gate" top: "attn_context" eltwise_param { operation: PROD } }
+layer { name: "policy" type: "InnerProduct" bottom: "attn_context" top: "policy" inner_product_param { num_output: 64 } }

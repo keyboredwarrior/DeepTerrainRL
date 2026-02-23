@@ -76,6 +76,16 @@ void cDrawScenarioSimChar::Update(double time_elapsed)
 	UpdateCamera();
 }
 
+bool cDrawScenarioSimChar::IsDone() const
+{
+	bool done = cDrawScenarioSimInteractive::IsDone();
+	if (mScene != nullptr)
+	{
+		done |= mScene->IsDone();
+	}
+	return done;
+}
+
 void cDrawScenarioSimChar::UpdateTracer(double time_elapsed)
 {
 	auto ctrl = mScene->GetCharacter()->GetController();

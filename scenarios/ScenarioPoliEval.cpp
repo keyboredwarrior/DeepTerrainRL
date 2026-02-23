@@ -3,6 +3,8 @@
 #include "sim/GroundVar2D.h"
 #include "sim/DogControllerCacla.h"
 #include "util/FileUtil.h"
+#include <json/json.h>
+#include <fstream>
 
 const int gNumWarmupCycles = 1;
 
@@ -29,6 +31,10 @@ cScenarioPoliEval::cScenarioPoliEval()
 
 	mPrevCOMPos.setZero();
 	mPrevTime = 0;
+	mSuccessDist = 1.0;
+	mNumSuccess = 0;
+	mMaxEpisodes = 0;
+	mEvalOutputFile = "";
 }
 
 cScenarioPoliEval::~cScenarioPoliEval()
@@ -55,6 +61,9 @@ void cScenarioPoliEval::ParseArgs(const cArgParser& parser)
 
 	parser.ParseBool("record_action_id_state", mRecordActionIDState);
 	parser.ParseString("action_id_state_output_file", mActionIDStateOutputFile);
+	parser.ParseDouble("poli_eval_success_dist", mSuccessDist);
+	parser.ParseInt("poli_eval_max_episodes", mMaxEpisodes);
+	parser.ParseString("poli_eval_output", mEvalOutputFile);
 }
 
 void cScenarioPoliEval::Init()
@@ -64,6 +73,7 @@ void cScenarioPoliEval::Init()
 	mEpisodeCount = 0;
 	mCycleCount = 0;
 	mDistLog.clear();
+	mNumSuccess = 0;
 
 	mPrevCOMPos = mChar->CalcCOM();
 	mPrevTime = mTime;
@@ -122,6 +132,22 @@ void cScenarioPoliEval::Update(double time_elapsed)
 			Reset();
 		}
 	}
+}
+
+bool cScenarioPoliEval::IsDone() const
+{
+	bool done = cScenarioSimChar::IsDone();
+	if (mMaxEpisodes > 0)
+	{
+		done |= (mEpisodeCount >= mMaxEpisodes);
+	}
+	return done;
+}
+
+void cScenarioPoliEval::Shutdown()
+{
+	cScenarioSimChar::Shutdown();
+	OutputEvalSummary();
 }
 
 double cScenarioPoliEval::GetAvgDist() const
@@ -206,6 +232,10 @@ void cScenarioPoliEval::RecordDistTraveled()
 	double dist = delta[0];
 
 	mAvgDist = cMathUtil::AddAverage(mAvgDist, mEpisodeCount, dist, 1);
+	if (dist >= mSuccessDist)
+	{
+		++mNumSuccess;
+	}
 	++mEpisodeCount;
 
 	mDistLog.push_back(dist);
@@ -407,4 +437,28 @@ bool cScenarioPoliEval::IsValidCycle() const
 {
 	bool valid = mCycleCount >= gNumWarmupCycles;
 	return valid;
+}
+
+void cScenarioPoliEval::OutputEvalSummary() const
+{
+	if (mEvalOutputFile == "")
+	{
+		return;
+	}
+
+	Json::Value root;
+	root["episodes"] = mEpisodeCount;
+	root["avg_dist"] = mAvgDist;
+	root["success_rate"] = (mEpisodeCount > 0) ? (static_cast<double>(mNumSuccess) / mEpisodeCount) : 0;
+	root["success_dist"] = mSuccessDist;
+	root["terrain"] = mTerrainFile;
+
+	Json::StreamWriterBuilder builder;
+	std::string payload = Json::writeString(builder, root);
+
+	std::ofstream out(mEvalOutputFile.c_str());
+	if (out.good())
+	{
+		out << payload;
+	}
 }

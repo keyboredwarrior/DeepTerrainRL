@@ -1,0 +1,7 @@
+name: "policy_mlp_baseline"
+layer { name: "state" type: "Input" top: "state" input_param { shape { dim: 1 dim: 376 } } }
+layer { name: "ip0" type: "InnerProduct" bottom: "state" top: "ip0" inner_product_param { num_output: 512 } }
+layer { name: "relu0" type: "ReLU" bottom: "ip0" top: "ip0" }
+layer { name: "ip1" type: "InnerProduct" bottom: "ip0" top: "ip1" inner_product_param { num_output: 256 } }
+layer { name: "relu1" type: "ReLU" bottom: "ip1" top: "ip1" }
+layer { name: "policy" type: "InnerProduct" bottom: "ip1" top: "policy" inner_product_param { num_output: 64 } }
