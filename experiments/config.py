@@ -6,7 +6,7 @@ from typing import Any, Dict, List, Literal
 import json
 
 ArchitectureFamily = Literal["mlp_baseline", "cnn_baseline", "terrain_attention"]
-PolicyBackend = Literal["legacy_caffe", "modern_backend"]
+PolicyBackend = Literal["legacy_pytorch", "modern_backend"]
 
 
 @dataclass
@@ -50,7 +50,7 @@ class ExperimentConfig:
     architecture: ArchitectureConfig
     curriculum: TerrainCurriculumConfig
     policy_checkpoint_solver: str
-    policy_backend: PolicyBackend = "legacy_caffe"
+    policy_backend: PolicyBackend = "legacy_pytorch"
     legacy_mode_enabled: bool = True
     max_iters: int = 2000
     output_root: str = "experiments/results"

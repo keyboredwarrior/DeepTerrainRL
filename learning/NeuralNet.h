@@ -1,7 +1,7 @@
 #pragma once
 #include "util/MathUtil.h"
-#include <caffe/net.hpp>
-#include <caffe/caffe.hpp>
+#include <pytorch/net.hpp>
+#include <pytorch/pytorch.hpp>
 #include <mutex>
 // FUUUUCK
 class cOptimizerExecutor;
@@ -22,12 +22,12 @@ public:
 		bool HasData() const;
 	};
 
-	static void PrintParams(const caffe::Net<tNNData>& net);
-	static int CalcNumParams(const caffe::Net<tNNData>& net);
-	static void CopyModel(const caffe::Net<tNNData>& src, caffe::Net<tNNData>& dst);
-	static void CopyParams(const std::vector<caffe::Blob<tNNData>*>& src_params, const std::vector<caffe::Blob<tNNData>*>& dst_params);
-	static bool CompareModel(const caffe::Net<tNNData>& a, const caffe::Net<tNNData>& b);
-	static bool CompareParams(const std::vector<caffe::Blob<tNNData>*>& a_params, const std::vector<caffe::Blob<tNNData>*>& b_params);
+	static void PrintParams(const pytorch::Net<tNNData>& net);
+	static int CalcNumParams(const pytorch::Net<tNNData>& net);
+	static void CopyModel(const pytorch::Net<tNNData>& src, pytorch::Net<tNNData>& dst);
+	static void CopyParams(const std::vector<pytorch::Blob<tNNData>*>& src_params, const std::vector<pytorch::Blob<tNNData>*>& dst_params);
+	static bool CompareModel(const pytorch::Net<tNNData>& a, const pytorch::Net<tNNData>& b);
+	static bool CompareParams(const std::vector<pytorch::Blob<tNNData>*>& a_params, const std::vector<pytorch::Blob<tNNData>*>& b_params);
 
 	cNeuralNet();
 	virtual ~cNeuralNet();
@@ -88,26 +88,26 @@ public:
 	virtual void CopyModel(const cNeuralNet& other);
 	virtual void LerpModel(const cNeuralNet& other, double lerp);
 	virtual void BlendModel(const cNeuralNet& other, double this_weight, double other_weight);
-	virtual void BuildBackendNetParams(caffe::NetParameter& out_params) const;
-	virtual void BuildNetParams(caffe::NetParameter& out_params) const { BuildBackendNetParams(out_params); }
+	virtual void BuildBackendNetParams(pytorch::NetParameter& out_params) const;
+	virtual void BuildNetParams(pytorch::NetParameter& out_params) const { BuildBackendNetParams(out_params); }
 	virtual bool CompareModel(const cNeuralNet& other) const;
 
 	virtual void ForwardInjectNoisePrefilled(double mean, double stdev, const std::string& layer_name, Eigen::VectorXd& out_y) const;
 	virtual void GetLayerState(const std::string& layer_name, Eigen::VectorXd& out_state) const;
 	virtual void SetLayerState(const Eigen::VectorXd& state, const std::string& layer_name) const;
 
-	virtual const std::vector<caffe::Blob<tNNData>*>& GetParams() const;
+	virtual const std::vector<pytorch::Blob<tNNData>*>& GetParams() const;
 	virtual void SyncSolverParams();
 	virtual void SyncNetParams();
 
 	virtual void CopyGrad(const cNeuralNet& other);
 
 protected:
-	class cCaffeNetWrapper : public caffe::Net<tNNData>
+	class cPyTorchNetWrapper : public pytorch::Net<tNNData>
 	{
 	public:
-		cCaffeNetWrapper(const std::string& net_file, caffe::Phase phase);
-		virtual ~cCaffeNetWrapper();
+		cPyTorchNetWrapper(const std::string& net_file, pytorch::Phase phase);
+		virtual ~cPyTorchNetWrapper();
 
 		virtual int GetLayerIdx(const std::string& layer_name) const;
 	};
@@ -115,7 +115,7 @@ protected:
 	static std::mutex gOutputLock;
 
 	bool mValidModel;
-		std::unique_ptr<cCaffeNetWrapper> mNet;
+		std::unique_ptr<cPyTorchNetWrapper> mNet;
 	std::shared_ptr<cOptimizerExecutor> mOptimizer;
 	std::string mOptimizerFile;
 	
@@ -127,12 +127,12 @@ protected:
 	virtual bool ValidOffsetScale() const;
 	virtual void InitOffsetScale();
 
-	virtual void FetchOutput(const std::vector<caffe::Blob<tNNData>*>& results_arr, Eigen::VectorXd& out_y) const;
+	virtual void FetchOutput(const std::vector<pytorch::Blob<tNNData>*>& results_arr, Eigen::VectorXd& out_y) const;
 	virtual void FetchInput(Eigen::VectorXd& out_x) const;
 	virtual void EvalBatchNet(const Eigen::MatrixXd& X, Eigen::MatrixXd& out_Y) const;
 	virtual void EvalBatchSolver(const Eigen::MatrixXd& X, Eigen::MatrixXd& out_Y) const;
 
-	virtual boost::shared_ptr<caffe::Net<tNNData>> GetTrainNet() const;
+	virtual boost::shared_ptr<pytorch::Net<tNNData>> GetTrainNet() const;
 	virtual void FeedTrainBatch(const Eigen::MatrixXd& X, const Eigen::MatrixXd& Y) const;
 	virtual void FeedInputBatch(const Eigen::MatrixXd& X) const;
 
