@@ -2,10 +2,11 @@ from __future__ import annotations
 
 from dataclasses import asdict, dataclass, field
 from pathlib import Path
-from typing import Any, Dict, List, Literal, Optional
+from typing import Any, Dict, List, Literal
 import json
 
 ArchitectureFamily = Literal["mlp_baseline", "cnn_baseline", "terrain_attention"]
+PolicyBackend = Literal["legacy_caffe", "modern_backend"]
 
 
 @dataclass
@@ -26,6 +27,17 @@ class ArchitectureConfig:
 
 
 @dataclass
+class TransitionMilestoneConfig:
+    enable_parity_check: bool = True
+    parity_tolerance: float = 0.05
+    enable_single_step_sanity: bool = True
+    min_nonzero_gradients: int = 1
+    enable_short_horizon_sanity: bool = True
+    short_horizon_iters: int = 100
+    enable_full_benchmark_matrix: bool = False
+
+
+@dataclass
 class ExperimentConfig:
     name: str
     algorithm: str
@@ -38,9 +50,12 @@ class ExperimentConfig:
     architecture: ArchitectureConfig
     curriculum: TerrainCurriculumConfig
     policy_checkpoint_solver: str
+    policy_backend: PolicyBackend = "legacy_caffe"
+    legacy_mode_enabled: bool = True
     max_iters: int = 2000
     output_root: str = "experiments/results"
     terrain_file: str = "data/terrain/mixed.txt"
+    milestones: TransitionMilestoneConfig = field(default_factory=TransitionMilestoneConfig)
 
     @staticmethod
     def from_file(path: str | Path) -> "ExperimentConfig":
@@ -49,6 +64,7 @@ class ExperimentConfig:
 
         payload["architecture"] = ArchitectureConfig(**payload["architecture"])
         payload["curriculum"] = TerrainCurriculumConfig(**payload["curriculum"])
+        payload["milestones"] = TransitionMilestoneConfig(**payload.get("milestones", {}))
         return ExperimentConfig(**payload)
 
     def snapshot(self, dst: str | Path) -> None:
