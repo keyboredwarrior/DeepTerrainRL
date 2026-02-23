@@ -7,6 +7,34 @@
 local linuxLibraryLoc = "../external/"
 local windowsLibraryLoc = "../library/"
 
+newoption {
+	trigger = "backend",
+	value = "NAME",
+	description = "Select ML backend: libtorch, onnxruntime, or both",
+	allowed = {
+		{ "libtorch", "Link against libtorch" },
+		{ "onnxruntime", "Link against ONNX Runtime" },
+		{ "both", "Link against libtorch and ONNX Runtime" }
+	}
+}
+
+newoption {
+	trigger = "with-pybind",
+	description = "Enable optional pybind integration"
+}
+
+newoption {
+	trigger = "with-ipc",
+	description = "Enable optional IPC integration"
+}
+
+local backend = _OPTIONS["backend"] or "libtorch"
+local use_libtorch = (backend == "libtorch" or backend == "both")
+local use_onnxruntime = (backend == "onnxruntime" or backend == "both")
+local use_pybind = _OPTIONS["with-pybind"] ~= nil
+local use_ipc = _OPTIONS["with-ipc"] ~= nil
+
+
 project "TerrainRL_Optimizer"
 	language "C++"
 	kind "WindowedApp"
@@ -55,6 +83,20 @@ project "TerrainRL_Optimizer"
 	targetdir "../"
 	buildoptions("-std=c++0x -ggdb -g" )	
 
+	if use_libtorch then
+		defines { "ENABLE_BACKEND_LIBTORCH" }
+	end
+	if use_onnxruntime then
+		defines { "ENABLE_BACKEND_ONNXRUNTIME" }
+	end
+	if use_pybind then
+		defines { "ENABLE_OPTIONAL_PYBIND" }
+	end
+	if use_ipc then
+		defines { "ENABLE_OPTIONAL_IPC" }
+	end
+
+
 	-- linux library cflags and libs
 	configuration { "linux", "gmake" }
 
@@ -65,24 +107,21 @@ project "TerrainRL_Optimizer"
 			"lib",
 			linuxLibraryLoc .. "Bullet/bin",
 			linuxLibraryLoc .. "jsoncpp/build/debug/src/lib_json",
-			linuxLibraryLoc .. "caffe/build/lib",
-		}
+			linuxLibraryLoc .. "ml_backends/libtorch/lib",
+			linuxLibraryLoc .. "ml_backends/onnxruntime/lib",
+					}
 		
 		includedirs { 
 			linuxLibraryLoc .. "Bullet/src",
 			linuxLibraryLoc,
 			linuxLibraryLoc .. "jsoncpp/include",
-			linuxLibraryLoc .. "caffe/include/",
-			linuxLibraryLoc .. "caffe/build/src/",
-			"C:/Program Files (x86)/boost/boost_1_58_0/",
-			linuxLibraryLoc .. "3rdparty/include/hdf5",
-			linuxLibraryLoc .. "3rdparty/include/",
-			linuxLibraryLoc .. "3rdparty/include/openblas",
-			linuxLibraryLoc .. "3rdparty/include/lmdb",
-			"/usr/local/cuda/include/",
+			linuxLibraryLoc .. "ml_backends/libtorch/include",
+			linuxLibraryLoc .. "ml_backends/libtorch/include/torch/csrc/api/include",
+			linuxLibraryLoc .. "ml_backends/onnxruntime/include",
+									"C:/Program Files (x86)/boost/boost_1_58_0/",
+															"/usr/local/cuda/include/",
 			linuxLibraryLoc .. "OpenCV/include",
-			linuxLibraryLoc .. "caffe/src/",
-			linuxLibraryLoc .. "CMA-ESpp/cma-es",
+						linuxLibraryLoc .. "CMA-ESpp/cma-es",
 		}
 		defines {
 			"_LINUX_",
@@ -104,10 +143,7 @@ project "TerrainRL_Optimizer"
 				"LinearMath_gmake_x64_debug",
 				"jsoncpp",
 				"boost_system",
-				"caffe",
 				"glog",
-				"hdf5",
-				"hdf5_hl",
 				"f2c",
 			}
 	 
@@ -124,30 +160,31 @@ project "TerrainRL_Optimizer"
 				"LinearMath_gmake_x64_release",
 				"jsoncpp",
 				"boost_system",
-				"caffe",
 				"glog",
-				"hdf5",
-				"hdf5_hl",
 				"f2c",
 			}
 
 	-- windows library cflags and libs
 	configuration { "windows" }
 		-- libdirs { "lib" }
+		libdirs {
+			windowsLibraryLoc .. "ml_backends/libtorch/lib",
+			windowsLibraryLoc .. "ml_backends/onnxruntime/lib",
+			windowsLibraryLoc .. "ml_backends/ipc/lib",
+		}
 		includedirs { 
 			windowsLibraryLoc .. "Bullet/include",
 			windowsLibraryLoc,
 			windowsLibraryLoc .. "Json_cpp",
-			windowsLibraryLoc .. "caffe/include/",
-			"C:/Program Files (x86)/boost/boost_1_58_0/",
-			windowsLibraryLoc .. "caffe/3rdparty/include/hdf5",
-			windowsLibraryLoc .. "caffe/3rdparty/include/",
-			windowsLibraryLoc .. "caffe/3rdparty/include/openblas",
-			windowsLibraryLoc .. "caffe/3rdparty/include/lmdb",
-			"C:/Program Files/NVIDIA GPU Computing Toolkit/CUDA/v7.5/include/",
+			windowsLibraryLoc .. "ml_backends/libtorch/include",
+			windowsLibraryLoc .. "ml_backends/libtorch/include/torch/csrc/api/include",
+			windowsLibraryLoc .. "ml_backends/onnxruntime/include",
+			windowsLibraryLoc .. "ml_backends/pybind11/include",
+			windowsLibraryLoc .. "ml_backends/ipc/include",
+						"C:/Program Files (x86)/boost/boost_1_58_0/",
+															"C:/Program Files/NVIDIA GPU Computing Toolkit/CUDA/v7.5/include/",
 			windowsLibraryLoc .. "OpenCV/include",
-			windowsLibraryLoc .. "caffe/src/",
-		}	
+					}	
 		links { 
 			"opengl32",
 			"glu32",
@@ -184,15 +221,11 @@ project "TerrainRL_Optimizer"
 			"curand",
 			"gflagsd",
 			"libglogd",
-			"libprotobufd",
-			"libprotocd",
-			"leveldbd",
-			"lmdbd",
-			"libhdf5_D",
-			"libhdf5_hl_D",
 			"Shlwapi",
 			"zlibd",
-			"libopenblas"
+			"libopenblas",
+			"torch",
+			"onnxruntime"
 		}
 
 	-- mac includes and libs
